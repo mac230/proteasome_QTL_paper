@@ -1,0 +1,1785 @@
+# 2021.10.17 - Proteasome activity QTL mapping paper 
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS: [hidelinks,12pt]
+#+LATEX_HEADER: \usepackage{ubi}
+
+#+NAME: title_page
+#+BEGIN_EXPORT latex
+\begin{center}
+{\noindent
+  \Large
+  \textbf{Substrate-Specific Effects of Natural Genetic Variation on Proteasome Activity}}
+
+\vspace{0.5in}
+{\noindent
+  Mahlon A. Collins, Randi R. Avery, and Frank W. Albert
+}
+
+\vspace{0.25in}
+{\noindent
+  Department of Genetics, Cell Biology, and Development\\
+  University of Minnesota\\
+  Minneapolis, MN, U.S.A.
+}
+
+
+\vspace{0.25in}
+{\noindent
+  Co-Corresponding Authors:\\
+  Mahlon A. Collins (mahlon@umn.edu)\\
+  Frank W. Albert (falbert@umn.edu)
+}
+
+\end{center}
+\newpage
+#+END_EXPORT
+
+* COMMENT ubi.sty - Custom Document Preamble
+#+BEGIN_SRC latex :tangle ~/texmf/tex/latex/ubi.sty :results silent
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{ubi}[2021.11.30 LaTeX package for Manuscript]
+
+\usepackage{amsmath,mdwlist,float,siunitx,lineno}
+\usepackage{grffile,graphicx,longtable,wrapfig,rotating,textcomp,capt-of}
+
+\floatplacement{figure}{H}
+
+\usepackage[superscript,biblabel,nomove]{cite}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[margin=1.0in]{geometry}
+
+\usepackage[labelfont=bf]{caption}
+
+\setlength{\parindent}{0em}
+
+\usepackage{times}
+
+\linespread{1.4}
+
+\author{Mahlon Collins}
+
+\pagestyle{plain}
+
+%% where to find figures
+\graphicspath{ {/home/mahlon/} }
+
+\usepackage{hyperref}
+
+#+END_SRC
+
+* COMMENT Pandoc Conversion from LaTeX to .docx
+#+NAME: pdf_docx_conversion
+#+BEGIN_SRC bash :results silent
+## produce a full output file ("-s") named
+## 'toc.docx' ("-o") using the input file './toc.tex'
+## pandoc -s -o ./toc.docx ./toc.tex
+
+## just make sure you generate the temporary preview
+## doc in emacs before executing this code block...
+
+## let's set this up so we get a date w/ each version
+## but I don't have to change anything.  Can do this
+## using the unix 'date' command and the following
+## formatting, which is like "2021.09.28", e.g.:
+## all of the following works:
+## touch "$( date +%Y.%m.%d )_this_file"
+## echo "this test" > "$( date +%Y.%m.%d )_this_file"
+## cat "$( date +%Y.%m.%d )_this_file"
+## rm "$( date +%Y.%m.%d )_this_file"
+cp /tmp/latex_preview.tex ~/emacs/ubi_QTL_paper/$( date +%Y.%m.%d )_pandoc_preview.tex
+
+## 2021.10.03 - pandoc doesn't reproduce captions in word docs
+## if they're made with the 'captionof', but it will reproduce
+## captions made via 'caption'.  use 'sed' to reformat the document
+## to replace all instances of 'captionof' with the corresponding
+## caption command.
+sed -i 's/\\end{figure}//g' ~/emacs/ubi_QTL_paper/$( date +%Y.%m.%d )_pandoc_preview.tex
+sed -i 's/\\captionof{figure}/\\caption/g' ~/emacs/ubi_QTL_paper/$( date +%Y.%m.%d )_pandoc_preview.tex
+sed -i 's/\\newline}}/\\newline}}\n\\end{figure}/g' ~/emacs/ubi_QTL_paper/$( date +%Y.%m.%d )_pandoc_preview.tex
+
+## with citations and defined citation style
+## need the '--resource-path' option or pandoc
+## won't find the images for the document 
+cd ~/emacs/ubi_QTL_paper/
+pandoc --bibliography=/home/mahlon/bibliographies/mac_bib.bib --csl=nature.csl \
+--reference-doc=custom-reference.docx -s \
+--resource-path=/home/mahlon/ \
+-o ~/emacs/ubi_QTL_paper/$( date +%Y.%m.%d )_UBI.docx \
+~/emacs/ubi_QTL_paper/$( date +%Y.%m.%d )_pandoc_preview.tex
+
+## move the temp file to the correct dir for bibtex
+cp /tmp/latex_preview* ~/emacs/ubi_QTL_paper/
+
+## bibtex
+## make sure we're in the right dir
+cd ~/emacs/ubi_QTL_paper/
+bibtex latex_preview
+
+## recompile x2 to get refs right
+## '-interaction=nonstopmode' means ignore errors on compilation
+latex -interaction=batchmode ~/emacs/ubi_QTL_paper/latex_preview.tex
+latex -interaction=batchmode ~/emacs/ubi_QTL_paper/latex_preview.tex
+
+## make the pdf
+pdflatex -interaction=batchmode ~/emacs/ubi_QTL_paper/latex_preview.tex
+
+## unique, date-based name for the output and put it in the appropriate dir
+mv ~/emacs/ubi_QTL_paper/latex_preview.pdf \
+~/emacs/ubi_QTL_paper/$( date +%Y.%m.%d )_latex_preview.pdf
+#+END_SRC
+
+* Abstract
+
+#+BEGIN_EXPORT latex
+%% add line numbers to document
+\linenumbers
+
+%% 300 word limit
+Protein degradation is an essential biological process that regulates protein
+abundance and removes misfolded and damaged proteins from cells.  In eukaryotes,
+most protein degradation occurs through the stepwise actions of two functionally
+distinct entities, the ubiquitin system and the proteasome.  Ubiquitin system
+enzymes attach ubiquitin to cellular proteins, targeting them for degradation.
+The proteasome then selectively binds and degrades ubiquitinated substrate
+proteins.  Genetic variation in ubiquitin system genes creates heritable
+differences in the degradation of their substrates.  However, the challenges of
+measuring the degradative activity of the proteasome independently of the
+ubiquitin system in large samples have limited our understanding of genetic
+influences on the proteasome.  Here, using the yeast \textit{Saccharomyces
+  cerevisiae}, we built and characterized reporters that provide
+high-throughput, ubiquitin system-independent measurements of proteasome
+activity.  Using single-cell measurements of proteasome activity from millions
+of genetically diverse yeast cells, we mapped 15 loci across the genome that
+influence proteasomal protein degradation.  Twelve of these 15 loci exerted
+specific effects on the degradation of two distinct proteasome substrates,
+revealing a high degree of substrate-specificity in the genetics of proteasome
+activity.  Using CRISPR-Cas9-based allelic engineering, we resolved a locus to a
+causal variant in the promoter of \textit{RPT6}, a gene that encodes a subunit
+of the proteasome's 19S regulatory particle.  Our results reveal the complex
+genetic architecture of proteasome activity and suggest that genetic influences
+on the proteasome may be an important source of variation in the many cellular
+and organismal traits shaped by protein degradation.\newpage
+#+END_EXPORT
+
+* Author Summary
+#+BEGIN_EXPORT latex
+%% 150-200 word non-technical summary 
+% Cells continually degrade proteins to regulate protein abundance and eliminate
+% improperly folded or damaged proteins.
+Protein degradation controls the abundance of cellular proteins and serves an
+essential role in protein quality control by eliminating misfolded and damaged
+proteins.  In eukaryotes, most protein degradation occurs in two steps.  The
+ubiquitin system first targets proteins for degradation by attaching ubiquitin
+to them.  The proteasome then selectively binds and degrades ubiquitinated
+proteins.  Understanding how individual genetic differences affect the activity
+of the proteasome could improve our understanding of the many traits influenced
+by protein degradation.  However, most assays that measure proteasomal protein
+degradation are not suitable for use in large samples or are affected by changes
+in the activity of the ubiquitin system.  Using yeast, we built reporters that
+provide high-throughput measurements of proteasome activity independently of the
+ubiquitin system.  We used measurements of proteasome activity from millions of
+live, single cells to identify regions of the genome with DNA variants that
+affect proteasomal protein degradation.  We identified 15 such regions, showing
+that proteasome activity is a genetically complex trait.  Using genome
+engineering, we found that one locus contained a variant in the promoter of a
+proteasome subunit gene that affected the activity of the proteasome towards
+multiple substrates.  Our results demonstrate that individual genetic
+differences shape proteasome activity and suggest that these differences may
+contribute to variation in the many traits regulated by protein
+degradation.\newpage
+#+END_EXPORT
+
+* Introduction
+#+BEGIN_EXPORT latex
+%% 1. proteasome and UPS protein deg. important
+%% In eukaryotes, most intracellular protein degradation results from the
+%% functionally distinct actions of the ubiquitin system and the proteasome, known
+%% collectively as the ubiquitin-proteasome system
+%% (UPS)
+Protein degradation helps maintain protein homeostasis by regulating protein
+abundance and eliminating misfolded and damaged proteins from cells.  The
+primary protein degradation pathway in eukaryotes is the ubiquitin-proteasome
+system (UPS).  The UPS consists of two functionally distinct components, the
+ubiquitin system and the
+proteasome\cite{pmid23028185,pmid9759494,pmid10073263,pmid28525752}.  Ubiquitin
+system enzymes bind degradation-promoting signal sequences (termed
+``degrons''\cite{pmid1986863}) in proteins, targeting bound substrate proteins
+for degradation by covalently attaching chains of the small protein ubiquitin
+(Figure 1A)\cite{pmid9759494,pmid10073263,pmid10797484,pmid35298243}.  The
+proteasome then degrades polyubiquitinated proteins using two elements, the 19S
+regulatory particle and the 20S core
+particle\cite{pmid23028185,pmid17418826,pmid24632559}.  The 19S regulatory
+particle selectively binds polyubiquitinated
+proteins\cite{pmid8811196,pmid28525752} then deubiquitinates, unfolds, and
+translocates them to the 20S core particle, which degrades proteins to short
+peptides\cite{pmid9920878}(Figure 1A).  The UPS is responsible for 70-80\% of
+intracellular protein degradation\cite{pmid28525752,pmid26669439} and influences
+the abundance of much of the
+proteome\cite{pmid33176155,pmid33974913,pmid9737984}.  Therefore, UPS activity
+must be precisely and dynamically regulated at the levels of (1) substrate
+targeting by the ubiquitin system\cite{pmid8922277,pmid10567911,pmid27744330}
+and (2) proteasomal protein degradation\cite{pmid31231659,pmid23994620}.
+Imbalances between UPS activity and the proteolytic needs of the cell adversely
+impact cellular viability and are associated with a diverse array of human
+diseases, including cancers, immune disorders, metabolic syndromes, and
+neurodegenerative
+diseases\cite{pmid23994620,pmid10073263,pmid12031893,pmid25413678,pmid25132814}.
+Thus, determining the factors that create variation in substrate targeting by
+the ubiquitin system and proteasomal protein degradation could improve our
+understanding of the many traits influenced by protein degradation.\newline
+
+%% 2. widespread genetic effects on ubi system, but don't know about proteasome
+Until recently, it was largely unknown how individual genetic differences affect
+UPS protein degradation.  To begin to address this question, we mapped genetic
+influences on the N-end Rule, a UPS pathway that recognizes degrons in protein
+N-termini (termed ``N-degrons''\cite{pmid1986863,pmid30622213}).  Our results
+showed that UPS activity is a genetically complex trait, shaped by variation
+throughout the genome\cite{Collins2021.05.05.442832}.  Some of the largest
+genetic effects on N-end rule substrates resulted from variation in ubiquitin
+system genes.  In particular, genes whose products process (\textit{NTA1}) and
+recognize N-degrons (\textit{UBR1} and \textit{DOA10}) and ubiquitinate
+substrates (\textit{UBC6}) each contained multiple causal variants that altered
+UPS activity, often in an N-degron-specific
+manner\cite{Collins2021.05.05.442832}.  Thus, individual genetic differences in
+the ubiquitin system are an important source of substrate-specific variation in
+UPS protein degradation.\newline
+
+%% 3. variation in proteasome genes affects proteasome
+We do not know whether genetic effects on the proteasome are as prominent as
+those on the ubiquitin system.  Our understanding of genetic influences on
+proteasome activity is largely limited to the clinical consequences of variation
+in proteasome genes.  Missense mutations in several proteasome genes that alter
+proteasome activity cause a spectrum of heritable disease phenotypes, including
+intellectual disability\cite{pmid23033978},
+lipodystrophy\cite{pmid21129723,pmid21953331}, cataracts\cite{pmid32500975},
+recurrent fever\cite{pmid26524591}, and morphological
+abnormalities\cite{pmid22210478}.  Variation in proteasome genes has also been
+linked to multiple common diseases, including myocardial
+infarction\cite{pmid16845397}, stroke\cite{pmid22882272}, type 2
+diabetes\cite{pmid17535269,pmid19007436}, and
+cancer\cite{pmid17000706,pmid26965516}.  However, these mutations and
+polymorphisms were identified through targeted sequencing of a subset of
+proteasome genes, leaving us with a biased, incomplete view of genetic
+influences on proteasome activity.  Genome-wide association studies have linked
+variation in the vicinity of proteasome genes to a variety of organismal
+phenotypes\cite{pmid24026423,pmid20953189,pmid25515861,pmid34421946}.  However,
+these studies have neither fine-mapped the individual causal variants for these
+loci nor determined whether they alter proteasome activity.\newline
+
+%% 4. substrate-specific effects
+A related question is whether variant effects on proteasome activity result in
+similar changes in the degradation of distinct proteasome substrates.  Variation
+in protein half-lives spans several orders of
+magnitude\cite{pmid16916930,pmid25466257,pmid21593866}, in part as a result of
+proteasome-specific factors that are independent of the ubiquitin system, such
+as how readily proteins are bound, unfolded, and degraded by the proteasome.
+Substrate protein factors such as unstructured initiation region
+length\cite{pmid21815694,pmid15311270,pmid31980598}, biases in amino acid
+composition\cite{pmid22716912,pmid27226608,pmid16601692}, where in the protein
+degradation is initiated\cite{pmid21815694}, and the stability of a protein's
+fold\cite{pmid19383601,pmid22716912} can also alter how readily a specific
+protein is degraded by the proteasome.  Moreover, the proteasome can exist in
+multiple configurations that can exhibit distinct preferences for individual
+protein
+substrates\cite{pmid32978409,pmid35159231,pmid12842014,pmid27605452,pmid12401807}.
+Thus, a systematic understanding of genetic effects on proteasome activity
+requires testing multiple proteasomal substrates with distinct sequence
+compositions.\newline
+
+%% 5. challenges of mapping proteasome activity
+Technical challenges have precluded a more systematic understanding of the
+genetics of proteasomal protein degradation.  The effects of natural DNA
+polymorphisms are often subtle, necessitating large sample sizes for detection.
+Statistically powerful genetic mapping of cellular traits such as proteasome
+activity requires assays that can provide quantitative measurements from
+thousands of individuals\cite{pmid23376951}.  At this scale, \textit{in vitro}
+biochemical assays of proteasome activity are impractical.  Several synthetic
+reporter systems can measure UPS activity \textit{in vivo} with
+high throughput\cite{pmid18988847,pmid27618491,pmid31200568}.  However, the
+output of these reporters reflects the activities of both the ubiquitin system
+and the proteasome.  Thus, when using these systems to map genetic influences on
+UPS activity, variant effects on the ubiquitin
+system\cite{Collins2021.05.05.442832} may mask or obscure specific effects on
+proteasomal protein degradation.\newline
+
+%% 7. ubi degrons
+The proteasome degrades a handful of endogenous cellular proteins without
+ubiquitination, providing a means of directly measuring proteasome activity
+independently of the ubiquitin system (Figure 1B).  These proteins contain
+ubiquitin-independent degrons, short peptides that promote rapid proteasomal
+degradation without
+ubiquitination\cite{pmid12660156,pmid17979831,pmid11248031,pmid22349505,pmid15090546}.
+Ubiquitin-independent degrons simultaneously function as proteasome recognition
+elements that engage the 19S regulatory particle and unstructured initiation
+regions for 20S core particle degradation (Figure
+1B)\cite{pmid23684952,pmid12562772,pmid17979831,pmid22349505,pmid15090546,pmid10350051,pmid25157437}.
+The degradation-promoting effect of these peptides is transferable; conjugating
+a ubiquitin-independent degron to a heterologous protein converts it to a
+short-lived, ubiquitin-independent proteasome
+substrate\cite{pmid12562772,pmid16275346,pmid22349505,pmid15090546,pmid25157437}.
+This property has been leveraged to create genetically encoded, high-throughput
+reporters of proteasome activity whose readout is independent of ubiquitin
+system activity\cite{pmid16275346,pmid17979831,pmid22676179}.\newline
+
+%% 8. intro para.
+Here, we combined ubiquitin-independent degron-based proteasome activity
+reporters with our recently developed, statistically powerful mapping strategy
+to study the genetics of proteasome activity in the yeast \textit{S.
+  cerevisiae}.  Our results reveal a polygenic genetic architecture of
+proteasome activity that is characterized by a high degree of substrate
+specificity.  One locus contained a causal variant in the promoter of
+\textit{RPT6}, a proteasome subunit gene, while other regions contained
+candidate causal genes with no known links to UPS protein degradation.  Our
+results show that individual genetic differences are an important source of
+variation in proteasome activity that may contribute to the complex genetic
+basis of the many cellular and organismal traits influenced by protein
+degradation.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]
+{emacs/ubi_QTL_paper/figures/final_figures/figure_01_ubiquitin_system_and_proteasome_final.pdf}
+\end{figure}
+\captionof{figure}{\textit{UPS protein degradation.  A. UPS protein degradation
+    resulting from (1) ubiquitin system targeting followed by (2) proteasomal
+    protein degradation.  B. Proteins with ubiquitin-independent degrons are
+    directly bound and degraded by the proteasome without ubiquitin system
+    targeting.\newline}}
+
+%% Protein homeostasis depends on continuous degradative protein turnover, which
+%% regulates protein abundance and removes misfolded and damaged proteins from
+%% cells.  Although protein degradation's influence on numerous aspects of cellular
+%% physiology is well-established, the factors that control the activity of protein
+%% degradation pathways remain incompletely understood.  Most protein degradation
+%% in eukaryotic cells occurs through the coordinated actions of the ubiquitin
+%% system and the proteasome, together known as the ubiquitin-proteasome system
+%% (UPS).  Ubiquitin system enzymes mark proteins for degradation by binding
+%% degradation-promoting sequences (termed ``degrons'') in substrate proteins and
+%% covalently attaching chains of the small protein ubiquitin to them.
+%% Polyubiquitinated proteins are degraded by the proteasome through two
+%% functionally distinct modules.  The 19S regulatory particle binds, unfolds,
+%% de-ubiquitinates, and translocates substrate proteins to the catalytically
+%% active 20S core particle, which degrades them to short peptides.\newline
+
+%% Variation in UPS activity can alter multiple cellular and organismal phenotypes.
+%% Elevated UPS activity confers resistance to a variety of cellular stressors,
+%% including heat shock, oxidative damage, nutrient deprivation, and protein
+%% misfolding.  At the organismal level, elevated proteasome activity enhances
+%% lifespan by countering age-related declines in protein homeostasis.  Conversely,
+%% age-related declines in UPS activity are linked to numerous diseases marked by
+%% the accumulation of ubiquitinated protein aggregates.  Thus, a more complete
+%% understanding the factors that control UPS activity could provide new insights
+%% into a variety of cellular and organismal traits.\newline
+
+%% We recently showed that individual genetic differences can create heritable
+%% variation in UPS activity by mapping the genetics of the UPS N-end rule pathway
+%% in yeast.  The N-end rule relates a protein's degradation rate to the identity
+%% of its N-terminal amino acid (``N-degron'') through two branches, the Ac/N-end
+%% rule, which recognizes acetylated N-degrons, and the Arg/N-end rule, which
+%% recognizes basic and bulky hydrophobic N-degrons.  UPS activity towards both
+%% classes of N-degrons is genetically complex, shaped by variation throughout the
+%% genome.  Some of the largest genetic effects on UPS N-end rule activity resulted
+%% from variation in ubiquitin system genes whose products process, recognize, and
+%% ubiquitinate N-end rule substrates prior to proteasomal degradation.  The
+%% effects of these variants were specific to either the Ac/N-end and Arg/N-end
+%% pathways.  By contrast, genetic effects on the proteasome might be expected to
+%% act in a substrate-independent manner.  However, we did not identify any loci
+%% that affected the full set of N-degrons.\newline
+
+%% Other efforts have identified alleles of proteasome genes linked to a variety of
+%% organismal traits.  Variants that increase the expression of proteasome genes
+%% are linked to drought resilience, heat tolerance, and pathogen resistance in
+%% multiple plant species.  Regulatory and missense variants in proteasome genes
+%% are associated with a strikingly diverse array of human diseases, including
+%% coronary artery disease\cite{pmid23111455}, ischaemic stroke\cite{pmid22882272},
+%% intellectual disability\cite{pmid23033978},
+%% deafness\cite{pmid28132691,pmid32500975}, morphological abnormalities\cite{pmid28132691}, and
+%% Graves' disease\cite{pmid10468973,pmid24490108}.  However, these alleles of
+%% proteasome genes have been identified because they influence organismal traits.
+%% When they have been shown to alter proteasome activity, this is likely because a
+%% variant in a proteasome gene intuitively suggests the hypothesis that its effect
+%% is caused by changes in proteasome activity.  To date, there have been no
+%% studies that have directly and systematically tested the influence of natural
+%% genetic variation on proteasome activity.  Consequently, we have an incomplete
+%% picture of the genetics of proteasome activity and how genetic influences on
+%% proteasome activity contribute to the complex genetic basis of other
+%% traits.\newline
+
+%% 23111455, CAD, tested expression
+%% 22882272, stroke, no testing
+%% 23033978, intellectual disability, no testing
+%% 32500975, cataract / deafness, tested
+%% 28132691, intellectual disability / morpho / deafness, tested
+%% 21129723, muscle atrophy / anemia / lipodystrophy, tested 
+%% 32129449, intellectual disability, short stauture, tested
+%% 30664889, lipodystrophy, tested
+%% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6890838/
+%% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8455891/
+%% regulatory and missense affect proteasome 
+
+
+% Proteasomal protein
+% degradation influences virtually all aspects of cellular
+% physiology\cite{pmid21633985,pmid17418826,pmid31727826}, necessitating precise,
+% dynamic coordination of proteasome activity with the proteolytic needs of the
+% cell.  
+
+% the ever-changing proteome and environment necessitate...
+
+% The proteolytic needs of the cell can profoundly change in response to
+% environmental factors.  To meet these needs, proteasome activity is shaped
+% through a diverse array of regulatory mechanisms that provide precise, dynamic
+% control of proteasome activity.  
+
+% A diverse array of regulatory mechanisms provide
+
+% Proteasomal protein degradation influences virtually all aspects of cellular
+% physiology\cite{pmid21633985,pmid17418826,pmid31727826}, necessitating precise,
+% dynamic control of proteasome activity.  Imbalances between proteasome activity
+% and the proteolytic needs of the cell adversely impact cellular viability and
+% are implicated in numerous diseases, including metabolic, immune, and
+% neurodegenerative disorders\cite{pmid25132814,pmid25413678,
+%   pmid15224658,pmid28292960, pmid17341190,pmid19007436}.\newline
+
+
+%% However, our knowledge of genetic influences on proteasome activity comes from
+%% assays mapping other traits....
+%% naturally suggests the hypothesis that proteasome involved 
+%% plus no quantitative insights
+%% known variants likely of large effect
+%% don't know whether large organismal phenotypic effect = large proteasome effect
+
+% Proteasome activity is determined by a diverse set of regulatory mechanisms that
+% alter the abundance, function, and composition of the cell's complement of
+% proteasomes\cite{pmid31231659}.  At the transcriptional level, multiple
+% regulators shape proteasome activity by directly or indirectly altering
+% proteasome gene expression.  Among the most well-studied proteasome
+% transcriptional regulators is the yeast Rpn4 transcription factor.  Rpn4
+% contains two constitutively active degrons that cause its rapid degradation.
+% However, during proteasomal insufficiency, Rpn4 escapes degradation and
+% stimulates the expression of proteasome genes until sufficient proteasome
+% activity exists.
+
+% Post-translational mechanisms also regulate proteasome activity.
+% Phosphorylation of multiple proteasome subunits at numerous sites alters
+% proteasome activity.  Other post-translational regulatory mechanisms tune
+% proteasome activity by altering the rate of proteasome assembly, subunit
+% composition, and autophagic degradation.  Environmental influences on these
+% regulatory mechanisms are well-characterized.  By contrast, we have almost no
+% knowledge of how individual genetic differences create heritable variation in
+% proteasome activity by perturbing these or other mechanisms.\newline
+
+  
+
+%% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3770795/
+%% coffino erales review
+%% "Recently, Ha et al. used a crosslinking label transfer technique to show that
+%% Rpn2, Rpn5 and Rpt1 are able to interact with the Rpn4 degron, giving a first
+%% clue to its molecular recognition mechanisms [9]."
+
+% Our incomplete knowledge of the factors
+% that control protein degradation limits our understanding of cellular
+% function and mechanisms of the many diseases in which protein degradation is
+% impaired, including metabolic, immune, and neurodegenerative
+% disorders\cite{pmid25132814,pmid25413678,pmid15224658,pmid28292960,
+%   pmid17341190,pmid19007436}.
+
+%% given clinical interest in proteasome, good to know genetics....
+
+%% use different substrates to probe regulatory particle
+%% use shared QTLs to find influences on core particle
+
+%% We observed that genetic influences on proteasome activity were largely
+%% substrate-specific (Figure 3), which raises two important implications.  First,
+%% genetic variation may perturb the function of the 19S regulatory particle and
+%% thereby alter the degradation of individual proteins without changes in 20S core
+%% particle activity.  Second, because substrates must pass through the 19S
+%% regulatory particle to access the 20S core particle, changes in 20S core
+%% particle activity may not lead to predictable changes in protein abundance.
+%% Instead, a complete understanding of how genetic variation shapes the
+%% degradation of individual proteins will likely require mapping genetic
+%% influences on the degradation of individual proteins.\newline
+
+%% variation could perturb substrate selection or proteasome activity 
+
+%% challenge of high-throughput, quantitative measurements of proteasome
+%% activity in-vivo - here's where
+%% 2008 coffino yeast paper as model of using ubi to study proteasome
+%% push the substrate-specificity angle here too - rpn4 vs. ODC
+%% can also push that genetic influences on de-ubiquitination would confound
+%% hoyt 2003 - mouse ODC works in yeast
+%% hoyt 2008 - mouse ODC deg does not require antizyme 
+
+%% Multiple lines of evidence suggest that individual genetic differences may be an
+%% important source of physiological and pathological variation in proteasome
+%% activity.  Genetic mapping has identified alleles of proteasome genes that
+%% confer beneficial traits in plants, including heat tolerance\cite{pmid25985140}
+%% and resistance to multiple pathogens\cite{pmid16331478,pmid27665045}.  Mutations
+%% and polymorphisms in proteasome genes have been linked to a strikingingly
+%% diverse array of human diseases, including coronary artery
+%% disease\cite{pmid23111455}, ischaemic stroke\cite{pmid22882272}, intellectual
+%% disability\cite{pmid23033978,pmid32500975}, deafness\cite{pmid28132691},
+%% morphological abnormalities\cite{pmid28132691}, and Graves'
+%% disease\cite{pmid10468973,pmid24490108}.  Transcriptional regulation of
+%% proteasome genes provides dynamic control of proteasome activity and genetic
+%% mapping of global gene expression has identified numerous \textit{cis}- and
+%% \textit{trans}-acting influences on proteasome gene
+%% expression\cite{pmid12897782,pmid30014850}.\newline
+%% %% li - rice heat tolerance QTL
+%% %% rosewarne - pathogens
+
+%% 28132691 - mutations in psmd12 (regulatory subunit), intellectual disability
+%% and accumulation of ubiquitinated proteins (but proteasome activity
+%% unaffected)
+
+%% 32500975 %% proteasome activity - atpase mutation leads to inclusion of
+%% cryptic exon - causes deafness plus cataracts; proteasome activity normal,
+%% but accumulation of ubiquitinated proteins 
+
+%% - [3] proteasome gene variants don't test proteasome activity
+%% Two important caveats apply to these results.  First, most studies linking
+%% proteasome genes to trait variation have not directly tested the influence of
+%% DNA sequence differences on proteasome activity.  Those that have produced
+%% conflicting results, with studies reporting that variation in proteasome genes
+%% causes altered proteasome activity, unaltered proteasome activity, or unaltered
+%% proteasome activity with accumulation of ubiquitinated proteins, suggesting
+%% defects in substrate selection.  Moreover, whether increasing the expression of
+%% individual proteasome genes necessarily leads to increased proteasome activity
+%% is unclear.  Some, but not all, studies report that increasing the expression of
+%% individual proteasome subunits in non-stoichiometric quantities does not
+%% increase proteasome activity because the excess subunits are not incorporated
+%% into a macromolecular complex.  Second, there have been no efforts to
+%% systematically map genetic influences on proteasome activity directly, and as a
+%% result, we do not know if variation in non-proteasome genes influences
+%% proteasome activity through indirect mechanisms.\newline
+
+%% - [4] challenges of genetic mapping of proteasome activity
+%% assays, genetic effects on ubiquitin system
+%% Genetic mapping in crosses of model organisms has provided foundational insights
+%% into the genetic basis of variation in numerous molecular, cellular, and
+%% organismal traits\cite{pmid25707927,pmid19584810} and could, in principle, be
+%% used to characterize the genetics of proteasome activity.  However, attaining
+%% the statistical power needed to comprehensively characterize variant effects
+%% requires measuring traits in large samples of many thousands of individuals.  At
+%% this scale, many assays of proteasome activity would be prohibitively labor- and
+%% time-intensive\cite{pmid31357232}.  Several fluorescent reporter systems provide
+%% high-throughput measures of proteasome activity in isogenic cell
+%% populations\cite{pmid31357232,pmid31200568,pmid18988847}.  However, these
+%% systems cannot be deployed in genetically diverse populations without
+%% confounding from genetic influences on reporter expression and function.
+%% Characterizing the genetics of proteasome activity also requires assays
+%% unaffected by genetic influences on the ubiquitin system, which are widespread
+%% and affect the processing, recognition, and ubiquitination of UPS
+%% substrates\cite{Collins2021.05.05.442832}.\newline
+
+%% genetic effects on ubiquitin system:
+%% 31997314 - otud7a
+%% 28251352 - E3 intellectual disability 
+%% ubqln2 
+
+#+END_EXPORT
+
+* Results
+** Single-Cell Measurements Reveal Heritable Variation in Proteasome Activity
+#+BEGIN_EXPORT latex
+We sought to develop a reporter system capable of measuring proteasome activity
+independently of the ubiquitin system \textit{in vivo} with high throughput and
+quantitative precision.  To do so, we built a series of tandem fluorescent
+timers (TFTs), fusions of two fluorescent proteins with distinct spectral
+profiles and maturation kinetics\cite{pmid24947383,pmid26609072}.  Our TFTs
+contained a faster-maturing green fluorescent protein (GFP\cite{pmid16369541})
+and a slower-maturing red fluorescent protein (RFP\cite{pmid15558047}) (Figure
+2A).  The two fluorophores in the TFT mature at different rates and, as a
+result, the RFP / GFP ratio changes over time.  If the TFT's degradation rate is
+faster than the RFP's maturation rate, the TFT's output, expressed as the
+$-\log_2$ RFP / GFP ratio, is directly proportional to its degradation rate
+(Figure 2B).  The TFT's output is also independent of the TFT's expression
+level\cite{pmid22729030}, making it possible to use TFTs in genetically diverse
+cell populations without confounding from genetic influences on reporter
+expression, which are expected in a genetically diverse cell
+population\cite{pmid33974913,pmid22729030,Collins2021.05.05.442832,
+  pmid30014850,pmid24402228,pmid33191917}.\newline
+
+To relate the TFT's output to proteasome activity, we fused the
+ubiquitin-independent degrons from the mouse ornithine decarboxylase (ODC) and
+yeast Rpn4 proteins to our TFTs (Figure 2C).  When expressed in yeast, the mouse
+ODC degron is recognized, bound, and degraded by the
+proteasome\cite{pmid12562772,pmid16275346,pmid12660156}.  This property has
+previously been used to measure proteasome activity \textit{in vivo} in yeast
+cells \cite{pmid18260085}.  We fused amino acids 410 through 461 of mouse ODC to
+the TFT's C-terminus, consistent with the geometric requirements of the ODC
+degron\cite{pmid17979831}, to create the ODC TFT (Figure 2C).  The Rpn4 protein
+contains a ubiquitin-independent degron in amino acids 1 to
+80\cite{pmid22349505,pmid15090546}.  We fused this sequence to the TFT's
+N-terminus to create the Rpn4 TFT (Figure 2C).  We reasoned that the distinct
+degron positions (C- and N-terminal), sequences, recognition mechanisms, and
+inferred 19S regulatory particle
+receptors\cite{pmid17979831,pmid17170706,pmid22349505} would allow us to
+identify potential substrate-specific genetic effects on proteasome
+activity.\newline
+
+We characterized the ODC and Rpn4 TFTs in live, single cells by flow cytometry.
+We first evaluated the sensitivity of each TFT by comparing each TFT's output in
+the BY laboratory strain and a BY strain lacking the \textit{RPN4} gene
+(hereafter ``BY \textit{rpn4}$\Delta$ '').  \textit{RPN4} encodes a
+transcription factor for proteasome genes and deleting \textit{RPN4} reduces
+proteasome activity\cite{pmid11248031,pmid10350051,pmid19914394}.  Deleting
+\textit{RPN4} strongly reduced the output from the ODC and Rpn4 TFTs in BY
+\textit{rpn4}$\Delta$ (t-test \textit{p} = 1.4e-6 and 1.6e-13, respectively;
+Figure 2D / E), showing that our TFTs provide sensitive \textit{in vivo}
+measurements of proteasome activity.  Consistent with previous
+reports\cite{pmid25157437,pmid16275346,pmid23684952}, in the BY strain the ODC
+TFT was more rapidly degraded than the Rpn4 TFT (t-test \textit{p} = 6.9e-10,
+Figure 2D / E).  Taken together, our results show that our TFTs provide
+quantitative, substrate-specific, \textit{in vivo} readouts of proteasome
+activity.\newline
+ 
+To understand how natural genetic variation affects proteasome activity, we
+measured the output of the ODC and Rpn4 TFTs in two \textit{Saccharomyces
+  cerevisiae} strains.  We compared BY, which is closely related to the S288C
+reference strain, and the genetically divergent vineyard strain, RM, whose
+genome differs from BY at an average at one out of every 200 base
+pairs\cite{pmid19734204}.  The RM strain showed higher proteasome activity
+towards the ODC and Rpn4 TFTs than BY (t-test \textit{p} = 1.9e-4 and 1.2e-8,
+respectively; Figure 2D / E).  We observed a significant interaction between
+strain background and proteasome substrate such that the magnitude of the BY /
+RM strain difference was greater for the Rpn4 TFT than the ODC TFT (two-way
+ANOVA interaction \textit{p} = 0.013).  Together, these results show that
+individual genetic differences create heritable, substrate-specific variation in
+proteasome activity.\newline
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=\textheight,keepaspectratio]
+{emacs/ubi_QTL_paper/figures/final_figures/figure_02_reporters_pvals.pdf}
+\end{figure}
+\captionof{figure}{\textit{Design and characterization of proteasome activity
+    reporters.  A. Schematic of the production and maturation of a TFT.  B. A
+    bar plot created with simulated data shows how differences in a TFT's
+    degradation rate influence the reporter's RFP and GFP levels, as well as the
+    -log$_2$ RFP / GFP ratio.  C. Diagram of mouse ODC and yeast Rpn4 showing
+    the location of each protein's ubiquitin-independent degron.  ``AZB'' =
+    antizyme binding site, ``AS'' = active site, ``AD'' = transcriptional
+    activation domain, ``C$_2$H$_2$'' = C$_2$H$_2$ zinc finger DNA binding
+    domain.  D. Density plots of proteasome activity from 10,000 cells for each
+    of 8 independent biological replicates per strain per reporter for the
+    indicated strains and TFTs.  Thin, opaque lines show individual biological
+    replicates and thicker, transparent lines show the group average for the
+    indicated strains.  E.  The median from each biological replicate in D. is
+    plotted as a stripchart.  t-test \textnormal{p}-values are shown for the
+    indicated strain versus BY.\newline}}
+
+% The Rpn4 and ODC degrons are also transferable; attaching either degron to a
+% heterologous protein leads to its rapid, ubiquitin-independent proteasomal
+% degradation.  Finally, recognition and degradation of substrates containing
+% either degron requires the 19S regulatory particle of the proteasome.
+
+%% ODC degron
+%% critical cys 441 plus important ala 442
+%% requires 26S -> 19S recognizes
+%% ubi competes w/ ODC for proteasome binding
+%% geometric constraints -> can't use it as C-terminal degron
+
+%% Rpn4 degron
+%% N-terminal w/ 1st 10 residues essential
+%% requires 26S proteasome
+%% interacts w/ several RP subunits (Rpn2, Rpn5, Rpt1)
+%% disordered initial segment followed by folded domain (see alphafold)
+
+%% shared properties
+%% confer short (< 10 minute) half-lives
+%% requires 26S proteasome
+%% provide proteasome binding tag plus IDR
+%% degrons are transerrable to other proteins
+
+%% key differences
+%% geometric constraints
+%% recognition mechanisms
+%% Rpt1 recognizes rpn4
+
+% Control of polyamine synthesis occurs primarily through regulation of the
+% degradation of ODC.  In particular, the
+
+% Rpn4p is a transcription factor for proteasome genes and its first 80
+% amino acids function as a constitutively active, ubiquitin-independent degron
+% that confers a short ($<$ 10 min.) half-life to the protein (Figure 1C).  The
+% 19S regulatory particle directly binds the Rpn4 degron, which also acts
+
+% During conditions of proteasomal insufficiency, Rpn4p is not degraded and
+% instead activates the transcription of proteasome genes, increasing proteasomal
+% activity.
+
+% To relate the RFP / GFP ratio to proteasomal activity, we added a
+% ubiquitin-independent degron to the TFT.  We constucted TFTs containing either
+% the N-terminal degron from Rpn4p or the C-terminal degron of ornithine
+% decarboxylase (ODC).  Rpn4p is a transcription factor for proteasome genes and
+% its 80 amino acid N-terminal promotes its ubiquitin-independent degradation by
+% the proteasome.
+
+#+END_EXPORT
+
+** Bulk Segregant Analysis Identifies Complex, Polygenic Influences on Proteasome Activity
+#+BEGIN_EXPORT latex
+To map genetic influences on proteasome activity, we used our ODC and Rpn4 TFTs
+to perform bulk segregant analysis, a statistically powerful genetic mapping
+method that compares large numbers of individuals with extreme values for a
+trait of interest selected from a genetically diverse
+population\cite{pmid20393561,pmid24402228,pmid33191917,Collins2021.05.05.442832,pmid1682921}.
+In our implementation, the method identifies quantitative trait loci (QTLs),
+regions of the genome with one or more DNA variants that influence proteasome
+activity.  We created genetically diverse cell populations by mating BY strains
+harboring either the ODC or Rpn4 TFT with RM and sporulating the resulting
+diploids (Figure 3A).  Using the resulting populations of haploid, genetically
+recombined progeny, we collected pools of 20,000 cells from the 2\% tails of the
+proteasome activity distribution using fluorescence-activated cell sorting
+(FACS) (Figure 3B-E).  We then whole-genome sequenced each pool to determine the
+allele frequency difference between the high and low UPS activity pools at each
+BY / RM DNA variant.  At QTLs affecting proteasome activity, the allele
+frequencies will be significantly different between pools, while at unlinked
+loci the allele frequencies will be the same.  We called significant QTLs using
+a logarithm of the odds (LOD) threshold previously determined to produce a 0.5\%
+false discovery rate for TFT-based genetic
+mapping\cite{Collins2021.05.05.442832} (see ``Methods'') and retained only QTLs
+detected at genome-wide significance in both of two independent biological
+replicates.  We determined the direction of QTL effects by computing the
+difference in RM allele frequency between the high and low proteasome activity
+pools at each QTL peak position.  When this value is positive, the RM allele of
+the QTL results in higher proteasome activity, while negative values indicate
+QTLs where the RM allele decreases proteasome activity.  We identified 11 QTLs
+for the ODC TFT and 7 QTLs for the Rpn4 TFT (Figure 4, Table 1).  The
+distribution of proteasome activity QTL effect sizes, as reflected by the allele
+frequency difference between pools, was continuous and consisted predominantly
+of QTLs with small effects (Figure 4, Table 1).  Together, our mapping results
+demonstrate that proteasome activity is a polygenic trait, shaped by variation
+throughout the genome.\newpage
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]
+{emacs/ubi_QTL_paper/figures/final_figures/figure_03_mapping_schematic_no_sig_line.pdf}
+\end{figure}
+\captionof{figure}{\textit{Mapping genetic influences on proteasome activity
+    using bulk segregant analysis.  A. Schematic of the experimental approach.
+    B. / C. Proteasome activity distributions for the ODC TFT (B.) and Rpn4 TFT
+    (C.).  Vertical lines show the gates used to collect cells with extreme high
+    or low proteasome activity.  D. / E.  Backplot of cells collected using the
+    gates in B. / C. onto a scatter plot of GFP and RFP for the ODC (D.)  and Rpn4
+    (E.) TFTs.\newline}}
+
+\begin{figure}[H]
+  \centering \includegraphics[width=\textwidth,keepaspectratio]
+  {emacs/ubi_QTL_paper/figures/final_figures/figure_04_all_reporters_AFD_LOD_combined_overlaps.pdf}
+  \end{figure} \captionof{figure}{\textit{Proteasome activity QTLs detected with
+  the ODC and Rpn4 TFTs.  A. The line plot shows the loess-smoothed allele
+  frequency difference between the high and low proteasome activity pools across
+  the \textnormal{S. cerevisiae} genome for each of two independent biological
+  replicates per reporter.  Asterisks denote QTLs, which are allele frequency
+  differences exceeding an empirically-derived LOD score significance threshold
+  (indicated in B.) in each of two independent biological replicates for a given
+  reporter.  The horizontal red lines denote an empirically-derived 99.9\%
+  quantile of the allele frequency difference.  Magenta horizontal lines above
+  pairs of asterisks denote QTLs detected with both TFTs with the same direction
+  of effect, which are termed ``overlapping QTLs''.  B. As in A., but for the
+  LOD score for proteasome activity QTLs.  The red horizontal line denotes the
+  LOD score significance threshold used to call QTLs at a 0.5\% FDR.\newline}}
+
+\begin{tabular}{lcccccc}
+  \hline
+  Reporter & Chromosome & LOD & AFD & Peak Position & Left Index & Right Index\\
+  \hline
+  ODC TFT & IIa & 9.76 & 0.10 & 69800 & 32850 & 107100\\
+  ODC TFT & IIb & 7.13 & -0.12 & 418100 & 358850 & 462650\\
+  ODC TFT & IVa & 5.64 & -0.10 & 85150 & 30400 & 127400\\
+  ODC TFT & V & 12.83 & -0.15 & 291350 & 247700 & 325650\\
+  ODC TFT & VIIa & 8.14 & -0.15 & 20000 & 0 & 52800\\
+  ODC TFT & VIIb & 28.74 & 0.23 & 409000 & 390050 & 431700\\
+  ODC TFT & X & 16.36 & 0.18 & 666850 & 649350 & 691550\\
+  ODC TFT & XII & 8.13 & 0.11 & 768150 & 666200 & 846700\\
+  ODC TFT & XIIIa & 18.96 & 0.19 & 47800 & 25200 & 75850\\
+  ODC TFT & XIIIb & 7.96 & 0.13 & 410900 & 377350 & 450100\\
+  ODC TFT & XIVa & 8.81 & -0.11 & 441750 & 381400 & 501600\\
+  Rpn4 TFT & IVb & 12.64 & -0.13 & 240600 & 213200 & 309150\\
+  Rpn4 TFT & V & 10.09 & -0.13 & 259650 & 218250 & 294900\\
+  Rpn4 TFT & VIIa & 10.21 & -0.15 & 88550 & 53550 & 141350\\
+  Rpn4 TFT & VIIc & 6.80 & -0.11 & 882500 & 840650 & 926150\\
+  Rpn4 TFT & XII & 40.11 & 0.23 & 672850 & 661800 & 685750\\
+  Rpn4 TFT & XIVb & 16.58 & 0.15 & 544150 & 497300 & 574600\\
+  Rpn4 TFT & XV & 30.00 & -0.22 & 167400 & 142600 & 186200\\
+  \hline
+\end{tabular}
+\captionof{table}{\textit{{Proteasome activity QTLs detected with the ODC and
+      Rpn4 TFTs.  The table lists all detected QTLs, sorted first by reporter,
+      then by chromosome.  Lowercase letters following chromosome numbers are
+      used to distinguish QTLs on the same chromosome.  ``LOD'', logarithm of
+      the odds; ``AFD'', RM allele frequency difference (high proteasome
+      activity pool minus low proteasome activity pool) at the QTL peak
+      position. ``Peak Position'', ``Left Index'', and ``Right Index'' refer to
+      base pair positions on the indicated chromosome.  Each number is the
+      average value calculated from two independent biological replicates for a
+      given QTL.}}}
+\newpage
+#+END_EXPORT
+
+** Genetic Influences on Proteasome Activity are Predominantly Substrate-Specific
+#+BEGIN_EXPORT latex
+To study substrate specificity in the genetic architecture of proteasome
+activity, we evaluated the overlap in the sets of QTLs obtained with the ODC and
+Rpn4 TFTs.  We defined overlapping QTLs as those whose peaks were within 100 kb
+of each other and had the same direction of effect.  We then calculated the
+overlap fraction for the two sets of QTLs by dividing the number of overlapping
+QTLs by the number of overlapping QTLs plus the non-overlapping QTLs for each
+reporter.  Only three proteasome activity QTLs, V, VIIA, and XII, overlapped
+between the sets of QTLs detected with the ODC and Rpn4 TFTs (overlap fraction =
+0.2, Figure 4, Table 1), suggesting a high degree of substrate
+specificity.\newline
+
+To put this result in context, we examined overlap among our
+previously-described UPS N-end Rule activity
+QTLs\cite{Collins2021.05.05.442832}.  The N-end Rule is divided into two primary
+branches based on how N-degrons are generated and
+recognized\cite{pmid21633985,pmid20110468,pmid3018930,pmid7744855}.
+Ac/N-degrons are generated and recognized by a common set of molecular
+effectors\cite{pmid21633985}.  Reflecting this, many QTLs for Ac/N-degrons
+affect all or a majority of the full set of
+Ac/N-degrons\cite{Collins2021.05.05.442832}.  By contrast, Arg/N-degrons are
+created and recognized via molecular mechanisms that affect individual or small
+subsets of Arg/N-degrons\cite{pmid21633985}.  Accordingly, QTLs for
+Arg/N-degrons tend to affect one or a minority of the set of
+Arg/N-degrons\cite{Collins2021.05.05.442832}.  We computed the QTL overlap
+fraction among all pairs of Arg/N-degrons or Ac/N-degrons with at least 7 QTLs
+(to match the number of Rpn4 TFT QTLs detected here) using the criteria above.
+As expected, QTLs for Ac/N-degrons were detected with multiple reporters (median
+overlap fraction = 0.54; Figure 5A), while Arg/N-degron QTLs were more specific
+(median overlap fraction = 0.21; Figure 5A).  The distributions of overlap
+fractions for Arg/N-degrons and Ac/N-degrons were highly distinct (Figure 5A),
+making them an ideal reference against which to gauge the substrate-specificity
+of proteasome activity QTLs.\newline
+
+The overlap fraction for the two sets of proteasome activity QTLs (0.2) was
+close to the median overlap for Arg/N-degrons (0.21, Figure 5A).  Thus, genetic
+influences on proteasome activity are as substrate-specific as those on
+N-degrons that are engaged by a broad variety of molecular mechanisms in the
+ubiquitin system\cite{pmid21633985}.  Overlap among the two sets of proteasome
+activity QTLs was considerably lower than that for the Ac/N-degrons (Figure 5A),
+which are generated and recognized via a common set of molecular
+effectors\cite{pmid20110468,pmid21633985}.  Crucially, the current proteasome
+and previous N-end Rule QTLs were detected with a similar experimental design
+with similarly high statistical power.  Therefore, these comparisons across
+datasets provide an estimate of substrate specificity that is immune to
+potential inflation from QTLs that truly affect multiple substrates but may
+appear to be substrate-specific because they happened to be detected with only
+one or a few reporters.  The chromosome XIVa and XIVb QTLs, which occur at
+similar positions but have opposing effects on the degradation of the Rpn4 and
+ODC TFTs (Figure 4A), provide further evidence that genetic effects on
+proteasome activity are highly substrate-specific.\newline
+
+\begin{figure}[H]
+  \centering \includegraphics[width=\textwidth,keepaspectratio]
+  {emacs/ubi_QTL_paper/figures/final_figures/figure_05_QTL_overlaps_boxed.pdf}
+\end{figure}
+\captionof{figure}{\textit{Overlap of N-end Rule and Proteasome Activity QTLs.
+    A. Analysis of QTL overlap for proteasome activity, Arg/N-degron, and
+    Ac/N-degron QTLs.  For all pairs of reporters in the indicated reporter
+    sets, we computed the overlap fraction as overlapping QTLs divided by total
+    QTLs (overlapping QTLs plus reporter-specific QTLs).  B. Overlap of
+    proteasome activity and N-end Rule QTLs.  The plot shows the number,
+    identify, and N-end Rule branch of the N-degron QTLs that overlap proteasome
+    activity QTLs on the y axis are ordered first by reporter then by
+    chromosomal position and labeled as in Table 1.  N-degrons on the x axis are
+    ordered by the distance of their QTL's peak position from the peak of the
+    corresponding proteasome activity QTL detected with either the ODC or Rpn4
+    TFT.\newline}}
+#+END_EXPORT
+
+** Effects of Proteasome Activity QTLs on the UPS N-end Rule
+#+BEGIN_EXPORT latex
+We previously showed that four QTLs affecting the degradation of N-end Rule
+substrates contained causal variants in ubiquitin system
+genes\cite{Collins2021.05.05.442832}.  As expected, these QTLs did not meet our
+criteria for overlap with any proteasome activity QTLs (Supplementary Table 1).
+However, many N-end Rule QTLs did not contain ubiquitin system genes, suggesting
+that they may result from genetic effects on processes unrelated to ubiquitin
+system targeting.  To understand whether variation in N-end Rule activity could
+be explained by genetic effects on proteasome activity, we examined the overlap
+between the proteasome activity QTLs identified here and our
+previously-identified N-end Rule QTLs\cite{Collins2021.05.05.442832}.  The set
+of N-end Rule QTLs comprises 149 QTLs detected with the 20 possible N-degron
+TFTs.  However, many N-end Rule QTLs detected with distinct reporters overlap.
+To account for this, we applied our criteria for QTL overlap, which reduced the
+149 N-end Rule QTLs detected with multiple reporters to 35 distinct,
+non-overlapping QTLs.  Eleven proteasome activity QTLs overlapped one of
+these 35 N-end Rule QTLs (31\%), suggesting that genetic effects on proteasome
+activity play a prominent role in shaping the activity of the UPS N-end Rule
+(Figure 5B).\newline
+
+Conversely, 4 of 15 proteasome activity QTLs did not overlap any N-end Rule
+QTLs, demonstrating that genetic variation can specifically alter the turnover
+of ubiquitin-independent proteasome substrates (Figure 5B).  In particular, the
+chromosome V QTL altered the degradation of both the ODC and Rpn4 TFTs, but no
+N-end Rule TFTs, suggesting broad effects on ubiquitin-independent proteasomal
+degradation (Figure 5B).  This agrees with previous findings that multiple
+factors specifically regulate the degradation of ubiquitin-independent
+proteasomal substrates, without affecting the degradation of ubiquitinated
+substrates\cite{pmid18260085}.\newline
+#+END_EXPORT
+
+** Overlapping Proteasome Activity and N-end Rule QTLs Identify Candidate Causal Genes for Proteasome Activity
+#+BEGIN_EXPORT latex
+QTLs often span large intervals, complicating efforts to identify the underlying
+causal genes and variants.  We reasoned that we could use overlapping proteasome
+activity and N-end Rule QTLs to more precisely estimate QTL peak positions and
+nominate candidate causal genes.  To this end, we computed the overlaps between
+the sets of proteasome activity QTLs and N-end rule QTLs and used this
+information to identify candidate causal genes (Figure 5B).  Two proteasome
+activity QTLs that were also detected with multiple N-degron TFTs occurred in
+genomic regions harboring variation that affects a multitude of traits in the BY
+/ RM cross.  The chromosome XIVa QTL was detected with the ODC TFT, 6
+Arg/N-degron TFTs, and 2 Ac/N-degron TFTs (Figure 5B).  The QTL's average peak
+position at base pair 462,767 was located approximately 4.5 kb from the
+\textit{MKT1} gene.  \textit{MKT1} encodes a multifunctional RNA binding protein
+involved in 3' UTR-mediated RNA regulation\cite{pmid2822656,pmid15082763}.
+Variation at \textit{MKT1} affects sporulation efficiency and
+growth\cite{pmid16462944,pmid16273108}.  The \textit{MKT1} locus also occurs in
+a gene expression QTL ``hotspot'' that influences the expression of thousands of
+genes\cite{pmid30014850,pmid24402228} in the BY / RM cross.  The chromosome XV
+QTL was detected with the Rpn4 TFT, 7 Arg/N-degron TFTs, and 1 Ac/N-degron TFT
+(Figure 5B).  This set of QTL peaks clustered tightly at the average peak
+position of base pair 164,256.  This position is approximately 7 kb away from
+\textit{IRA2}, which encodes a negative regulator of RAS
+signaling\cite{pmid2164637}.  Variation in \textit{IRA2} affects the expression
+of thousands of genes in this cross of strains\cite{pmid18416601} via multiple
+causal variants that interact epistatically\cite{pmid34791209}.  The QTL
+intervals for the chromosome XIVa and XV QTLs do not contain any genes encoding
+proteasome subunits or proteasome assembly factors.  Therefore, the QTLs at
+\textit{MKT1} and \textit{IRA2} illustrate that some genetic effects on
+proteasome activity likely result from complex, indirect molecular mechanisms
+involving altered gene expression.\newline
+%% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2292755/
+%% RM IRA2 = stronger RAS inhibition
+%% RM IRA2 allele = lower proteasome activity
+%% https://pubmed.ncbi.nlm.nih.gov/15975924/
+%% RAS inhibits ubiquitin proteasome activity
+
+The chromosome VIIb QTL detected with the ODC TFT had the highest number of
+overlapping N-end rule QTLs, with QTLs detected in the same region with 4
+Arg/N-degron and 7 Ac/N-degron TFTs (Figure 5B).  The high number of overlapping
+N-end Rule QTLs for both Arg/N-degrons and Ac/N-degrons suggested that this QTL
+contained variation that broadly affects UPS protein degradation.  The average
+chromosome VIIb QTL peak position at base pair 411,250 is within the
+\textit{RPT6} open reading frame.  \textit{RPT6} encodes a subunit of the
+proteasome's 19S regulatory particle, suggesting that this QTL influences
+proteasome activity via direct effects on a proteasome subunit.\newline
+#+END_EXPORT
+
+** Proteasome Activity is Shaped by a Causal Variant in the \textit{RPT6} Promoter
+#+BEGIN_EXPORT latex
+We selected the chromosome VIIb QTL for further experimental dissection.  There
+are no missense \textit{RPT6} variants between BY and RM.  However, a non-coding
+variant occurs at base pair 411,461 (Figure 6A) in an intergenic region between
+\textit{RPT6} and the adjacent \textit{ALG13}, which encodes an enzyme involved
+in oligosaccharide biosynthesis.  We hypothesized that this intergenic variant
+(hereafter, ``\textit{RPT6} -175'') was the causal nucleotide for the chromosome
+VIIb QTL.\newline
+
+To test the effect of \textit{RPT6} -175, we used CRISPR-Cas9 to create BY
+strains with either the BY or RM alleles at \textit{RPT6} -175.  We tested the
+effect of the \textit{RPT6} -175 RM allele on the ODC and Rpn4 TFTs, as well as
+a subset of Ac/N-degron and Arg/N-degron reporters with which the chromosome
+VIIb QTL was also detected.  The \textit{RPT6} -175 RM allele significantly
+increased proteasome activity towards the ODC TFT as compared to the BY
+\textit{RPT6} -175 allele (\textit{p} = 2.8e-6, Figure 6B).  Consistent with our
+QTL mapping results, the \textit{RPT6} -175 RM allele did not increase
+proteasome activity towards the Rpn4 TFT (\textit{p} = 0.42, Figure 6B).  The
+\textit{RPT6} -175 RM allele significantly increased the degradation of the
+proline, serine, and threonine Ac/N-degron TFTs, while its effect on the
+degradation of the tryptophan Arg/N-degron was not statistically significant
+(Figure 6B).  These differences in how the \textit{RPT6} -175 RM allele affects
+the Rpn4 and tryptophan TFTs compared to other reporters suggest that this
+allele exerts substrate-specific effects on proteasome activity.  The Rpn4
+degron, in particular, is recognized by distinct 19S regulatory particle
+receptors from the other substrates tested here\cite{pmid22349505} and may,
+therefore, be unaffected by \textit{RPT6} -175.\newline
+
+The \textit{RPT6} -175 variant occurs in an intergenic region with putative
+promoters for \textit{RPT6} and the divergently oriented \textit{ALG13}.  While
+we cannot formally exclude that the effect of the \textit{RPT6} -175 occurs via
+\textit{ALG13}, there are no known links between \textit{ALG13} and proteasome
+activity.  Moreover, previous genetic mapping in this cross of yeast strains
+identified a QTL in this same region affecting \textit{RPT6} mRNA abundance with
+the same direction of effect as the proteasome activity QTL\cite{pmid30014850}.
+Increasing the expression of individual proteasome subunits is a
+well-established mechanism for increasing proteasome
+activity\cite{pmid31455793,pmid22972301,pmid31231659}.  Based on these
+observations, we conclude that the effects of \textit{RPT6} -175 on proteasome
+activity likely result from increased \textit{RPT6} expression.\newline
+
+To understand potential molecular mechanisms of the \textit{RPT6} -175 RM
+allele, we scanned the BY and RM \textit{RPT6} promoters for transcription
+factor binding sites\cite{pmid22102575}.  The RM, but not BY, allele contains a
+putative binding site for Yap1p (Figure 6C).  Yap1p is a stress-associated
+transcription factor that indirectly increases proteasome activity during
+cellular stress, in part, by increasing expression of the proteasome gene
+transcription factor \textit{RPN4}
+\cite{pmid11918814,pmid21139140,pmid18627600}.  A multi-species alignment of the
+\textit{RPT6} promoter, showed that the \textit{RPT6} -175 BY allele is highly
+conserved among yeast species (Figure 6D).  The BY allele is also present in the
+ancestral Taiwanese \textit{S. cerevisiae} isolate, further indicating that the
+\textit{RPT6} -175 RM allele is derived.  We then examined \textit{RPT6} -175
+allelic status in a global panel of 1,011 \textit{S. cerevisiae}
+isolates\cite{pmid29643504} to better understand its population characteristics
+and evolutionary origin.  Overall, the \textit{RPT6} -175 RM allele has a 33.7\%
+population frequency.  However, among the ``Wine / European'' clade that
+contains RM, the \textit{RPT6} -175 RM allele has a population frequency of
+91.6\% (Supplementary Figure 1).  No other clades have a comparably high
+\textit{RPT6} -175 RM allele frequency (Supplementary Figure 1).  Yap1p
+increases proteasome activity in response to a variety of cellular stressors,
+including ethanol stress\cite{pmid27864171}.  Thus, the \textit{RPT6} -175 RM
+allele may have arisen in the ``Wine / European'' as an adaptation to the
+wine-making environment.  Our results demonstrate that natural populations
+harbor derived alleles that increase proteasome activity and suggest that these
+alleles may have arisen through adaptation to local environmental conditions.
+
+\begin{figure}[H]
+  \centering \includegraphics[width=\textwidth,keepaspectratio]
+  {emacs/ubi_QTL_paper/figures/final_figures/figure_06_RPT6_fine-mapping_box.pdf}
+\end{figure} \captionof{figure}{\textit{Fine-mapping a causal variant for the
+    chromosome VIIb QTL.  A. Genomic interval for the chromosome VIIb QTL.  The
+    red box depicts the 95\% confidence interval of the chromosome VIIb QTL peak
+    position, which was calculated using the chromosome VIIb QTL intervals from
+    the ODC and N-end Rule TFTs with which the QTL was detected.  B. CRISPR-Cas9
+    was used to engineer strains containing either the BY or RM allele at
+    \textnormal{RPT6} -175 and the variant's effect on proteasome activity was
+    measured using the ODC and Rpn4 ubiquitin-independent degron TFTs, as well
+    as the proline (Pro), serine (Ser), and threonine (Thr) Ac/N-end TFTs, and
+    the tryptophan (Trp) Arg/N-degron TFT.  C. Sequence logo for the predicted
+    Yap1p binding site created by the RM allele of \textnormal{RPT6} -175.
+    D. Multi-species alignment of the \textnormal{RPT6} promoter.  The
+    \textnormal{RPT6} -175 is highlighted.  \textnormal{``S. pas''} =
+    \textnormal{Saccharomyces pastorianus}, \textnormal{``S. par''} =
+    \textnormal{Saccharomyces paradoxus}, \textnormal{``S. mik''} =
+    \textnormal{Saccharomyces mikatae}, \textnormal{``S. kud''} =
+    \textnormal{Saccharomyces kudriavzevii}, \textnormal{``S. bay''} =
+    \textnormal{Saccharomyces bayanus}, \textnormal{``S. pombe''} =
+    \textnormal{Saccharomyces pombe}\newline}}
+#+END_EXPORT
+
+* Discussion
+#+BEGIN_EXPORT latex
+Much of the proteome undergoes regulated turnover via proteasomal protein
+degradation\cite{pmid33176155,pmid9737984,pmid33974913}.  Proteasome activity is
+thus a critical determinant of the abundance of individual proteins and, by
+extension, the functional state of the cell.  Physiological variation in
+proteasome activity enables adaptation to changing internal and external
+cellular environments, such as during cellular
+stress\cite{pmid22414377,pmid17512408,pmid31455793}, while pathological
+variation in proteasome activity is linked to a diverse array of human
+diseases\cite{pmid25132814,pmid24490108,pmid23994620,pmid10073263}.  However, a
+full understanding of the factors that determine proteasome activity has
+remained elusive.  In particular, the challenges of measuring proteasomal
+protein degradation in large samples has limited our understanding of the
+genetics of proteasome activity.  By combining high-throughput proteasome
+activity reporters with a statistically powerful genetic mapping method, we have
+established individual genetic differences as an important source of variation
+in proteasome activity.  Our results add to the emerging picture of the complex
+effects of genetic variation on protein degradation, which include widespread
+effects on the activity of the ubiquitin system\cite{Collins2021.05.05.442832}
+and, as we show here, the proteasome.\newline
+
+%% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8455891/
+%% https://www.jacionline.org/article/S0091-6749(19)31607-0/fulltext
+This work provides several new insights into how individual genetic differences
+shape the activity of the proteasome.  Previous studies identified rare
+mutations in proteasome genes as the cause of a variety of monogenic
+disorders\cite{pmid21129723,pmid21953331,pmid24490108,pmid32500975,pmid22210478,pmid21852578}.
+However, it was unclear to what extent these mutations are representative of
+genetic effects on proteasome activity.  Our results suggest that
+disease-causing mutations and disease-linked polymorphisms with large effects on
+proteasome activity represent one extreme of a continuous distribution of
+variant effects on proteasome activity.  Aberrant proteasome activity is a
+hallmark of numerous common human
+diseases\cite{pmid25132814,pmid23994620,pmid10073263}.  Our results raise the
+possibility that the risk for these diseases may be subtly influenced by common
+variants that create heritable variation in proteasome activity.  Our unbiased,
+genome-wide genetic mapping also identified QTLs containing no genes with
+previously-established connections to the regulation of proteasome activity.  In
+particular, the chromosome XIVa and XV QTLs do not contain any genes encoding
+proteasome genes or proteasome assembly factors.  Instead, the peaks of these
+QTLs center on \textit{MKT1} and \textit{IRA2}, which encode an RNA-binding
+protein and a RAS signaling regulator respectively, further highlighting the
+complexity of genetic effects on proteasome activity.\newline
+
+The proteasome activity QTLs we have identified add new insight into how genetic
+variation shapes the molecular effectors of cellular protein degradation.  We
+recently mapped the genetics of the UPS N-end rule pathway and discovered
+multiple DNA variants that alter the activity of four functionally distinct
+components of the ubiquitin system\cite{Collins2021.05.05.442832}.  Here, we
+extend this result by showing that genetic variation also shapes protein
+degradation through effects on the proteasome.  Although many stimuli, such as
+protein misfolding or heat shock, cause coordinated changes in the activity of
+the ubiquitin system and the proteasome, recent work shows that these two
+systems can also be regulated independently and function autonomously of one
+another\cite{pmid22524316,pmid31231659}.  For example, ubiquitination can
+initiate events besides proteasomal protein degradation, including lysosomal
+protein degradation, altered protein subcellular localization, and signaling
+cascade activation\cite{pmid27746020,pmid22524316,pmid33495455}.  Likewise, a
+number of cellular proteins are bound and degraded by the proteasome without
+modification by the ubiquitin system\cite{pmid23684952}.  Thus, predicting how
+genetic variation shapes the turnover of individual proteins will require
+consideration of genetic effects on both the ubiquitin system and the
+proteasome.\newline
+
+Genetic effects on proteasome activity were largely substrate-specific.  Such a
+result would be expected if individual genetic differences primarily affected
+substrate selection by the proteasome's 19S regulatory particle.  Efficient
+degradation of the proteasome substrates tested here and in our previous
+study\cite{Collins2021.05.05.442832} require the proteasome's 19S regulatory
+particle\cite{pmid1334232,pmid22349505}, which contains multiple substrate
+receptors.  The ODC and Rpn4 degrons are likely bound by distinct 19S receptors.
+Although the 19S receptors for the ODC degron are not known, the observation
+that the ODC degron competes with polyubiquitinated proteins for 19S binding has
+been used to infer that it is primarily bound by the canonical 19S ubiquitin
+receptors, Rpn1, Rpn10, and Rpn13\cite{pmid17979831,pmid17170706}.  In contrast,
+the Rpn4 degron is bound by the 19S subunits Rpn2 and Rpn5\cite{pmid22349505}.
+Substrate selection is influenced by multiple factors, such as the subunit
+composition of the 19S regulatory particle and post-translational modification
+of 19S subunits\cite{pmid31380390,pmid17418826,pmid23028185}.  Variant effects
+on these processes and other factors affecting 19S function may alter substrate
+selection, creating substrate-specific effects on proteasomal protein
+degradation.  Four proteasome activity QTLs were not detected with any N-end
+reporters (Figure 5B), likely reflecting genetic mechanisms that specifically
+affect the degradation of substrates with ubiquitin-independent degrons.
+Collectively, our results suggest that genetic effects on protein degradation
+primarily affect subsets of UPS substrates, either via ubiquitin system
+targeting or at the substrate selection step preceding proteasomal protein
+degradation, rather than globally altering protein turnover.\newline
+
+%% https://www.nature.com/articles/s41467-019-13906-8
+%% matouschek platform article
+%% ``The stoichiometric proteasome subunits Rpn1, Rpn10, and Rpn13 serve as
+%% ubiquitin receptors''
+%% ``proteins with single chains of K48-linked ubiquitin are targeted for
+%% degradation almost exclusively through binding to Rpn10''
+
+%% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3770795/
+%% coffino ODC
+
+%% https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3906847/
+%% rpn4 interaction paper 
+%% ``Rpn2, Rpt1 and Rpn5 are the receptors for the Ub-independent degron.''
+
+%% substrates themselves affect turnover
+%% effects on proteasome differentially affect turnover
+
+%% ``Rpn2, Rpn5 and Rpt1 are able to interact with the Rpn4 degron, giving a first
+%% clue to its molecular recognition mechanisms ''
+
+%% Rpn10 and Rpn13 are ubi receptors
+%% https://www.nature.com/articles/s41467-019-13906-8
+%% multiple receptors can bind ubi and perhaps ubi degrons 
+
+Using CRISPR-Cas9 based allelic engineering, we resolved a QTL on chromosome VII
+to a causal nucleotide in the \textit{RPT6} promoter.  This region also harbors
+a QTL that influences \textit{RPT6} expression\cite{pmid30014850}, suggesting
+the variant alters proteasome activity by altering \textit{RPT6} expression.
+This mechanism is consistent with previous results showing that increasing the
+expression of individual proteasome subunits can increase proteasome activity.
+For example, increased expression of the 19S subunit \textit{PSMD11} increases
+proteasome activity in human embryonic stem cells, which helps them maintain an
+undifferentiated stem cell identity\cite{pmid22972301}.  In yeast,
+overexpression of the \textit{PRE9} gene, which encodes a subunit of the 20S
+core particle, increases proteasome activity and promotes resistance to cellular
+stress\cite{pmid31455793}.  Cells employ diverse mechanisms to monitor and
+degrade non-stoichoimetric subunits of protein
+complexes\cite{pmid35300891,pmid35316660}, raising the question of how
+increasing the expression of individual proteasome subunits increases proteasome
+activity.  Rpt6 subunits not stably incorporated into proteasomes are protected
+from degradation by the chaperone proteasome associated assembly factor 1
+(PAAF1)\cite{pmid19446323,pmid35316660}.  Thus, PAAF1 association with Rpt6
+creates a stable Rpt6 pool that can be used to rapidly drive proteasome
+assembly, leading to increased proteasome activity.\newline
+  
+We have developed a generalizable strategy for mapping genetic effects on
+proteasomal protein degradation with high statistical power.  The elements in
+our reporters function in many other eukaryotic organisms, including human
+cells\cite{pmid22729030,pmid22349505,pmid12562772}.  Deploying the reporter
+systems developed here in genetically diverse cell populations may provide new
+insights into the genetic basis of a variety of cellular and organismal traits,
+including the many diseases marked by aberrant proteasome activity.\newpage
+#+END_EXPORT
+
+* Materials and Methods
+** Tandem Fluorescent Timer (TFT) Reporters of Proteasome Activity
+#+BEGIN_EXPORT latex
+We used TFTs, fusions of two fluorescent proteins with distinct spectral
+profiles and maturation kinetics, to measure proteasome activity.  The most
+common TFT implementation consists of a faster-maturing green fluorescent
+protein (GFP) and a slower-maturing red fluorescent protein
+(RFP)\cite{pmid24947383,pmid26609072,pmid22729030,pmid25519137}.  Because the
+two fluorescent proteins mature at different rates, the RFP / GFP ratio changes
+over time.  If the TFT's degradation rate is faster than the RFP's maturation
+rate, the negative log$_2$ RFP / GFP ratio is directly proportional to the TFT's
+degradation rate\cite{pmid24947383,pmid22729030}.  The RFP / GFP ratio is also
+independent of the TFT's expression level,\cite{pmid22729030,pmid24947383},
+enabling high-throughput, quantitative measurements of TFT turnover in
+genetically diverse cell
+populations\cite{pmid22729030,Collins2021.05.05.442832}.  All TFTs in the
+present study contained superfolder GFP (sfGFP)\cite{pmid16369541} and the RFP
+mCherry\cite{pmid15558047} separated by an unstructured 35 amino acid peptide
+sequence to minimize fluorescence resonance energy
+transfer\cite{pmid22729030}.\newline
+
+To measure proteasome activity with our TFTs, we fused the ubiquitin-independent
+degrons from the mouse ornithine decarboxylase (ODC) and yeast Rpn4 proteins to
+our sfGFP-mCherry TFTs.  ODC, an enzyme involved in polyamine biosynthesis,
+contains a ubiquitin-independent degron in its C-terminal 37 amino
+acids\cite{pmid16275346,pmid17979831,pmid15016805,pmid12660156}.  Rpn4, a
+transcription factor for proteasome genes, contains a ubiquitin-independent
+degron in its N-terminal 80 amino
+acids\cite{pmid22349505,pmid10350051,pmid11248031}.  Both degrons are recognized
+and bound by the 19S regulatory particle without ubiquitin conjugation and
+function as unstructured initiation regions\cite{pmid15311270} for 20S core
+particle degradation.  Attaching either degron to a heterologous protein
+converts it into a short-lived proteasomal substrate with half-lives of
+approximately 5 minutes for the ODC degron and 20 minutes for the Rpn4
+degron\cite{pmid25157437,pmid16275346,pmid23684952}.  The ODC and Rpn4 degron
+sfGFP-mCherry TFTs thus provide direct, quantitative, substrate-specific
+readouts of proteasome activity.\newline
+
+We used a previously described approach\cite{Collins2021.05.05.442832} to
+construct TFT reporters and yeast strains harboring TFTs.  Each TFT contained
+the constitutively active \textit{TDH3} promoter, the \textit{ADH1} terminator,
+sfGFP, mCherry, and the KanMX selection module\cite{pmid10514571}.  TFTs were
+constructed so that the ubiquitin-independent degron was immediately adjacent to
+mCherry (Figure 2C), consistent with established guidelines for optimizing TFT
+function\cite{pmid26609072}.  We used BFA0190 as the plasmid backbone for all
+TFT plasmids.  BFA0190 contains 734 bp of sequence upstream and 380 bp of
+sequence downstream of the \textit{LYP1} ORF separated by a SwaI restriction
+site.  We inserted TFT reporters into BFA0190 by digesting the plasmid with SwaI
+and inserting TFT components between the \textit{LYP1} flanking sequences using
+isothermal assembly cloning (Hifi Assembly Cloning Kit; New England Biolabs
+[NEB], Ipswich, MA, USA).  The 5' and 3' \textit{LYP1} flanking sequences in
+each TFT plasmid contain natural SacI and BglII restriction sites, respectively.
+We produced linear DNA transformation fragments by digesting TFT-containing
+plasmids with SacI and BglII and gel purifying the fragments (Monarch Gel
+Purification, NEB).  Genomic integration of each linear transformation fragment
+results in deletion of the \textit{LYP1} gene, allowing selection for TFT
+integration at the \textit{LYP1} locus using the toxic amino acid analogue
+thialysine (S-(2-aminoethyl)-L-cysteine
+hydrochloride)\cite{pmid6798161,pmid20946810,pmid27037072} and
+G418\cite{pmid10514571}.  All plasmids used in this study are listed in
+Supplementary Table 2.
+#+END_EXPORT
+
+** Yeast Strains and Handling
+*** Yeast Strains
+#+BEGIN_EXPORT latex
+We used two genetically divergent \textit{Saccharomyces cerevisiae} yeast
+strains for characterizing our proteasome activity TFTs and mapping genetic
+influences on proteasome activity.  The haploid BY strain (genotype:
+\textit{MATa} \textit{his3}$\Delta$ \textit{ho}$\Delta$) is a laboratory strain
+that is closely related to the \textit{S. cerevisiae} S288C reference strain.
+The haploid RM strain is a vineyard isolate with genotype \textit{MAT}$\alpha$
+\textit{can1}$\Delta$::STE2pr-SpHIS5 \textit{his3}$\Delta$::NatMX
+\textit{AMN1-BY ho}$\Delta$::HphMX URA3-FY.  BY and RM differ, on average, at 1
+nucleotide per 200 base pairs, such that approximately 45,000 single nucleotide
+variants (SNVs) between the strains can serve as markers in a genetic mapping
+experiment\cite{pmid24402228,pmid33191917,pmid19734204,pmid20393561}.  We also
+engineered a BY strain lacking the \textit{RPN4} gene (hereafter ``BY
+\textit{rpn4}$\Delta$'') to characterize the sensitivity and dynamic range of
+our TFT reporters.  We replaced the \textit{RPN4} gene with the NatMX cassette,
+which confers resistance to the antibiotic nourseothricin\cite{pmid10514571}.
+To do so, we transformed BY with a DNA fragment created by PCR amplifying the
+NatMX cassette from plasmid from Addgene plasmid \#35121 (a gift from John
+McCusker) using primers with 40 bp of homology to the 5' upstream and 3'
+downstream sequences of \textit{RPN4} using the transformation procedure
+described below.  Strain genotypes are presented in Table 2.  Supplementary
+Table 3 lists the full set of strains used in this study.\newline
+
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{llll}
+      \hline
+      Short Name & Genotype & Antibiotic Resistance & Auxotrophies\\
+      \hline
+      BY & \textit{MATa his3}$\Delta$ \textit{ho}$\Delta$ &  & histidine\\
+      
+      RM & \textit{MAT}$\alpha$ \textit{can1}$\Delta$::STE2pr-SpHIS5
+                            & clonNAT, hygromycin & histidine\\
+                 & \textit{his3}$\Delta$::NatMX \textit{ho}$\Delta$::HphMX & &\\
+      
+      BY \textit{rpn4}$\Delta$ & \textit{MATa his3}$\Delta$ \textit{ho}$\Delta$
+                                 \textit{rpn4$\Delta$}::NatMX
+                            & clonNAT & histidine\\
+      \hline
+\end{tabular}
+  \end{center}
+  \caption{\textit{Strain genotypes}}
+  \label{Base strain genotypes}
+\end{table}
+
+The media formulations for all experiments are listed in Table 3.  Synthetic
+complete media powders (SC -lys and SC -his -lys -ura) were obtained from
+Sunrise Science (Knoxville, TN, USA).  We added the following reagents at the
+following concentrations to yeast media where indicated: G418, 200 mg / mL
+(Fisher Scientific, Pittsburgh, PA, USA); ClonNAT (nourseothricin sulfate,
+Fisher Scientific), 50 mg / L; thialysine (S-(2-aminoethyl)-L-cysteine
+hydrochloride; MilliporeSigma, St. Louis, MO, USA), 50 mg / L; canavanine
+(L-canavanine sulfate, MilliporeSigma), 50 mg / L.\newline
+
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{lll}
+      \hline
+      Media Name & Abbreviation & Formulation\\
+      \hline
+      Yeast-Peptone-Dextrose & YPD & 10 g / L yeast extract\\
+                 &  & 20 g / L peptone\\
+                 &  & 20 g / L dextrose\\
+      \hline
+      Synthetic Complete & SC & 6.7 g / L yeast nitrogen base\\
+                 &  & 1.96 g / L amino acid mix -lys\\
+                 &  & 20 g / L dextrose\\
+      \hline
+      Haploid Selection & SGA & 6.7 g / L yeast nitrogen base\\
+                 &  & 1.74 g / L amino acid mix -his -lys -ura\\
+                 &  & 20 g / L dextrose\\
+      \hline
+      Sporulation & SPO & 1 g / L yeast extract\\
+                 &  & 10 g / L potassium acetate\\
+                 &  & 0.5 g / L dextrose\\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{\textit{Media Formulations}}
+  \label{Media Formulations}
+\end{table}
+#+END_EXPORT
+
+*** Yeast Transformations
+#+BEGIN_EXPORT latex
+We used the lithium acetate / single-stranded carrier DNA / polyethyline glycol
+(PEG) method for all yeast transformations\cite{pmid17401334}.  In brief, yeast
+strains were inoculated into 5 mL of YPD liquid medium for overnight growth at
+\SI{30}{\celsius}.  The next day, we diluted 1 mL of each saturated culture into
+50 mL of fresh YPD and grew cells for 4 hours.  Cells were washed in sterile
+ultrapure water and then in transformation solution 1 (10 mM Tris HCl [pH 8.0],
+1 mM EDTA [pH 8.0], and 0.1 M lithium acetate).  After each wash, we pelleted
+the cells by centrifugation at 3,000 rpm for 2 minutes in a benchtop centrifuge
+and discarded supernatants.  After washing, cells were suspended in 100 $\mu$L
+of transformation solution 1 along with 50 $\mu$g of salmon sperm carrier DNA
+and 300 ng of transforming DNA and incubated at \SI{30}{\celsius} for 30 minutes
+with rolling.  Subsequently, 700 $\mu$L of transformation solution 2 (10 mM Tris
+HCl [pH 8.0], 1 mM EDTA [pH 8.0], and 0.1 M lithium acetate in 40\% PEG) was
+added to each tube, followed by a 30 minute heat shock at \SI{42}{\celsius}.
+Transformed cells were then washed in sterile, ultrapure water, followed by
+addition of 1 mL of liquid YPD medium to each tube.  Cells were incubated in YPD
+for 90 minutes with rolling at \SI{30}{\celsius} to allow for expression of
+antibiotic resistance cassettes.  We then washed the cells with sterile,
+ultrapure water and plated 200 $\mu$L of cells on solid SC -lys medium with G418
+and thialysine, and, for strains with the NatMX cassette, clonNAT.  We
+single-colony purified multiple independent colonies (biological replicates)
+from each transformation plate for further analysis as indicated in the text.
+Reporter integration at the targeted genomic locus was verified by colony
+PCR\cite{pmid1389166} using the primers listed in Supplementary Table 4.
+#+END_EXPORT
+
+*** Yeast Mating and Segregant Populations
+#+BEGIN_EXPORT latex
+We used a modified synthetic genetic array (SGA)
+methodology\cite{pmid20946810,pmid27037072} to create populations of genetically
+variable, recombinant cells (``segregants'') for genetic mapping.  BY strains
+with either ODC or Rpn4 TFTs were mixed with the RM strain on solid YPD medium
+and grown overnight at \SI{30}{\celsius}.  We selected for diploid cells
+(successful BY / RM matings) by streaking mixed BY / RM cells onto solid YPD
+medium containing G418, which selects for the KanMX cassette in the TFT in the
+BY strain, and clonNAT, which selects for the NatMX cassette in the RM strain.
+Diploid cells were inoculated into 5 ml of liquid YPD and grown overnight at
+\SI{30}{\celsius}.  The next day, cultures were washed with sterile, ultrapure
+water, and resuspended in 5 mL of SPO liquid medium (Table 3).  We induced
+sporulation by incubating cells in SPO medium at room temperature with rolling
+for 9 days.  After confirming sporulation by brightfield microscopy, we pelleted
+2 mL of cells, which were then washed with 1 mL of sterile, ultrapure water, and
+resuspended in 300 $\mu$L of 1 M sorbitol containing 3 U of Zymolyase lytic
+enzyme (United States Biological, Salem, MA, USA) to degrade ascal walls.  Asci
+were digested for 2 hours at \SI{30}{\celsius} with rolling.  Spores were then
+washed with 1 mL of 1 M sorbitol, vortexed for 1 minute at the highest intensity
+setting, and resuspended in sterile ultrapure water.  We confirmed the release
+of cells from asci by brightfield microscopy and plated 300 $\mu$l of cells onto
+solid SGA medium containing G418 and canavanine.  This media formulation selects
+for haploid cells with (1) a TFT via G418, (2) the \textit{MATa} mating type via
+the \textit{Schizosaccharomyces pombe} \textit{HIS5} gene under the control of
+the \textit{STE2} promoter (which is only active in \textit{MATa} cells), and
+(3) replacement of the \textit{CAN1} gene with \textit{S. pombe} \textit{HIS5}
+via the toxic arginine analog canavanine\cite{pmid20946810,pmid27037072}.
+Haploid segregants were grown for 2 days at \SI{30}{\celsius} and harvested by
+adding 10 mL of sterile, ultrapure water and scraping the cells from each plate.
+Each segregant population cell suspension was centrifuged at 3000 rpm for 10
+minutes and resuspended in 1 mL of SGA medium.  We added 450 $\mu$L of 40\% (v /
+v) sterile glycerol solution to 750 $\mu$L to each segregant culture and stored
+this mixture in screw cap cryovials at \SI{-80}{\celsius}.  We stored 2
+independent sporulations each of the ODC and Rpn4 degron TFT-containing
+segregants (derived from our initial matings) as independent biological
+replicates.
+#+END_EXPORT
+
+** Flow Cytometry and Fluorescence-Activated Cell Sorting
+*** Flow Cytometry
+#+BEGIN_EXPORT latex
+We characterized our proteasome activity TFTs using flow cytometry.  For all
+flow cytometry experiments, we inoculated yeast strains into 400 $\mu$L of
+liquid SC -lys medium with G418 for overnight growth in 2 mL 96 well plates at
+\SI{30}{\celsius} with 1000 rpm mixing on a MixMate (Eppendorf, Hamburg,
+Germany).  The next day, 4 $\mu$L of each saturated culture was inoculated into
+a fresh 400 $\mu$L of G418-containing SC -lys media and cells were grown for an
+additional 3 hours prior to flow cytometry.  We performed all flow cytometry
+experiments on an LSR II flow cytometer (BD, Franklin Lakes, NJ, USA) equipped
+with a 20 mW 488 nm laser with 488 / 10 and 525 / 50 filters for measuring
+forward and side scatter and sfGFP fluorescence, respectively, as well as a 40
+mW 561 nm laser and a 610 / 20 filter for measuring mCherry fluorescence.  Table
+4 lists the parameters and settings for all flow cytometry and
+fluorescence-activated cell sorting (FACS) experiments.\newline
+
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{lrrl}
+      \hline
+      Parameter & Laser Line (nm) & Laser Setting (V) & Filter\\
+      \hline
+      forward scatter (FSC) & 488 & 500 & 488/10\\
+      side scatter (SSC) & 488 & 275 & 488/10\\
+      sfGFP & 488 & 500 & 525/50\\
+      mCherry & 561 & 615 & 610/20\\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{\textit{Flow cytometry and FACS settings.}}
+  \label{Flow cytometry and FACS settings.}
+\end{table}
+
+All flow cytometry data was analyzed using R\cite{R_reference} and the flowCore
+R package\cite{pmid19358741}.  We filtered each flow cytometry dataset to
+exclude all events outside of 10\% $\pm$ the median forward scatter (a proxy for
+cell size).  This gating approach captured the central peak of cells in the FSC
+histogram and removed cellular debris, aggregates of multiple cells, and
+restricted our analyses to cells of the same approximate
+size\cite{Collins2021.05.05.442832}.\newline
+
+For flow cytometry experiments related to reporter characterization, we recorded
+10,000 cells each from 8 independent biological replicates per strain for the
+ODC and Rpn4 degron TFTs.  We extracted the median from each independent
+biological replicate and used these values for statistical analyses.  The
+statistical significance of between strain differences for the ODC and Rpn4
+degron TFTs was assessed using a two-tailed t-test without correction for
+multiple testing.  We used an ANOVA with strain (BY or RM) and reporter (ODC or
+Rpn4 degron TFT) as fixed factors to assess the statistical significance of the
+interaction of genetic background with reporter.\newline
+
+For flow cytometry experiments related to fine-mapping the chromosome VIIb QTL,
+we used the following procedures.  We recorded 10,000 cells each from 12
+independent biological replicates per strain (BY \textit{RPT6} -175 BY and BY
+\textit{RPT6} -175 RM) per guide RNA per reporter (ODC and Rpn4 TFTs, as well as
+proline, serine, threonine, and tryptophan N-degron TFTs).  We observed that,
+consistent with previous results\cite{Collins2021.05.05.442832}, the output of
+the TFTs changed over the course of each flow cytometry experiment.  We used a
+previously-described approach in which the residuals of a regression of the
+TFT's output on time were used to correct for this
+effect\cite{pmid33191917,Collins2021.05.05.442832}.  We then Z-score normalized
+the sets of median values for each reporter, setting the mean equal to the
+median of the BY \textit{RPT6} -175 BY allele strain.  The effect of the
+\textit{RPT6} -175 genotype was assessed using a linear mixed model implemented
+in the R packages 'lme4'\cite{lme4} and 'lmertest'\cite{lmer} using
+\textit{RPT6} -175 genotype and guide RNA as fixed effects and plate as a random
+effect.
+#+END_EXPORT
+
+*** Fluorescence-Activated Cell Sorting (FACS)
+#+BEGIN_EXPORT latex
+We used FACS to collect pools of segregant cells for genetic mapping by bulk
+segregant analysis\cite{pmid24402228,pmid33191917}.  We thawed and inoculated
+segregant populations into 5 mL of SGA medium containing G418 and canavanine for
+overnight growth at \SI{30}{\celsius} with rolling.  The following morning, we
+diluted 1 mL of cells from each segregant population into a fresh 4 mL of SGA
+medium containing G418 and canavanine.  Diluted segregant cultures were grown
+for 4 hours prior to sorting on a FACSAria II cell sorter (BD).  Plots of side
+scatter (SSC) height by SSC width and forward scatter (FSC) height by FSC width
+were used to remove doublets from each sample and cells were further filtered to
+contain cells within $\pm$ 7.5\% of the central FSC peak.  We empirically
+determined that this filtering approach excluded cellular debris and aggregates
+while retaining the primary haploid cell population.  We also defined a
+fluorescence-positive population by retaining only those TFT-containing cells
+with sfGFP fluorescence values higher than negative control BY and RM strains
+without TFTs.  We collected pools of 20,000 cells each from the 2\% high and low
+proteasome activity tails (Figure 2B / C) from two independent biological
+replicates for each TFT.  Pools of 20,000 cells were collected into sterile 1.5
+mL polypropylene tubes containing 1 mL of SGA medium that were grown overnight
+at \SI{30}{\celsius} with rolling.  After overnight growth, we mixed 750 $\mu$L
+of cells with 450 $\mu$L of 40\% (v / v) glycerol and stored this mixture in 2
+mL 96 well plates at \SI{-80}{\celsius}.
+#+END_EXPORT
+
+** Genomic DNA Isolation, Library Preparation, and Whole-Genome Sequencing
+#+BEGIN_EXPORT latex
+To isolate genomic DNA from sorted segregant pools, we first pelleted 800 $\mu$L
+of each pool by centrifugation at 3,700 rpm for 10 minutes.  Supernantants were
+discarded and cell pellets were resuspended in 800 $\mu$L of a 1 M sorbitol
+solution containing 0.1 M EDTA, 14.3 mM $\beta$-mercaptoethanol, and 500 U of
+Zymolyase lytic enzyme (United States Biological) to digest cell walls.
+Zymolyase digestions were carried out by resuspending cell pellets with mixing
+at 1000 rpm for 2 minutes followed by incubation for 2 hours at
+\SI{37}{\celsius}.  After completing the digestion reaction, we pelleted and
+resuspended cells in 50 $\mu$L of phosphate-buffered saline.  We then used the
+Quick-DNA 96 Plus kit (Zymo Research, Irvine, CA, USA) to extract genomic DNA
+according to the manufacturer's protocol, including an overnight protein
+digestion in a 20 mg / mL proteinase K solution at \SI{55}{\celsius} prior to
+loading samples onto columns.  DNA was eluted from sample preparation columns
+using 40 $\mu$L of DNA elution buffer (10 mM Tris-HCl [pH 8.5], 0.1 mM EDTA).
+DNA concentrations for each sample were determined with the Qubit dsDNA BR assay
+kit (Thermo Fisher Scientific, Waltham, MA, USA) in a 96 well format using a
+Synergy H1 plate reader (BioTek Instruments, Winooski, VT, USA).\newline
+
+We used genomic DNA from our segregant pools to prepare a short-read library for
+whole-genome sequencing on the Illumina Next-Seq platform using a
+previously-described
+approach\cite{pmid24402228,pmid33191917,Collins2021.05.05.442832}.  The Nextera
+DNA library kit (Illumina, San Diego, CA, USA) was used according to the
+manufacturer's instructions with the following modifications.  We fragmented and
+added sequencing adapters to genomic DNA by adding 5 ng of DNA to a master mix
+containing 4 $\mu$L of Tagment DNA buffer, 1 $\mu$L of sterile molecular biology
+grade water, and 5 $\mu$L of Tagment DNA enzyme diluted 1:20 in Tagment DNA
+buffer and incubating this mixture on a SimpliAmp thermal cycler using the
+following parameters (Thermo Fisher Scientific): \SI{55}{\celsius} temperature,
+20 $\mu$L reaction volume, 10 minute incubation.  We PCR amplified libraries
+prior to sequencing by adding 10 $\mu$L of the tagmentation reaction to a master
+mix containing 1 $\mu$L of an Illumina i5 and i7 index primer pair mixture,
+0.375 $\mu$L of ExTaq polymerase (Takara), 5 $\mu$L of ExTaq buffer, 4 $\mu$L of
+a dNTP mixture, and 29.625 $\mu$L of sterile molecular biology grade water.  To
+multiplex samples for sequencing, we generated all 96 possible index oligo
+combinations using 8 i5 and 12 i7 index primers.  Libraries were PCR amplified
+on a SimpliAmp thermal cycler using the following parameters: initial
+denaturation at \SI{95}{\celsius} for 30 seconds, then 17 cycles of
+\SI{95}{\celsius} for 10 seconds (denaturation), \SI{62}{\celsius} for 30
+seconds (annealing), and \SI{72}{\celsius} for 3 minutes (extension).  The DNA
+concentration of each reaction was quantified using the Qubit dsDNA BR assay kit
+(Thermo Fisher Scientific).  We pooled equimolar amounts of each sample, ran
+this mixture on a 2\% agarose gel, and extracted and purified DNA in the 400 bp
+to 600 bp region using the Monarch Gel Extraction Kit (NEB) according to the
+manufacturer's instructions.\newline
+
+The pooled library was submitted to the University of Minnesota Genomics Center
+(UMGC) for quality control assessment and Illumina sequencing.  UMGC staff
+performed three quality control (QC) assays prior to sequencing.  The PicoGreen
+dsDNA quantification reagent (Thermo Fisher Scientific) was used to determine
+library concentration, with a concentration $\geq$ 1 ng/$\mu$L required to pass.
+The Tapestation electrophoresis system (Agilent Technologies, Santa Clara, CA,
+USA) was used to determine library size, with libraries in the range of 200 to
+700 bp passing.  Finally, the KAPA DNA Library Quantification kit (Roche, Basel,
+Switzerland) was used to determine library functionality, with libraries
+requiring a concentration $\geq$ 2 nM to pass.  The submitted library passed
+each QC assay.  The library was sequenced on a Next-Seq 550 instrument in
+mid-output, 75 bp paired-end mode, generating 153,887,828 reads across all
+samples, with a median of 9,757,090 and a range of 5,994,921 to 14,753,319 reads
+per sample.  The mean read quality for all samples was $>$ 30.  The median read
+coverage of the genome was 21, with a range of 16 to 25 across all samples.
+Data will be deposited into the NIH Sequence Read Archive following publication.
+
+%% mean quality score for ea. sample > 30
+%% total reads     = 153887828
+%% median reads    = 9757090.5
+%% min reads       = 5994921
+%% max reads       = 14753319
+%% coverage median = 21
+%% coverage range  = 16 to 25
+#+END_EXPORT
+
+** QTL Mapping
+#+BEGIN_EXPORT latex
+We used a previously-described approach to identify QTLs from our whole-genome
+sequencing data\cite{pmid24402228,pmid33191917,Collins2021.05.05.442832}.  We
+initially filtered our raw reads to retain only those with a mean base quality
+score greater than 30.  Filtered reads were aligned to the
+\textit{S. cerevisiae} reference genome (sacCer3) with the Burroughs-Wheeler
+alignment tool\cite{pmid19451168}.  We used samtools\cite{pmid19505943} to first
+remove unaligned reads, non-uniquely aligned reads, and PCR duplicates, and then
+to produce vcf files containing coverage and allelic read counts at each of
+18,871 high-confidence, reliable SNPs\cite{pmid23376951,pmid20393561}, with BY
+alleles as reference and RM alleles as alternative alleles.\newline
+
+QTLs were called from allele counts using the MULTIPOOL
+algorithm\cite{pmid22537047}.  MULTIPOOL estimates a logarithm of the odds (LOD)
+score by calculating a likelihood ratio from two models.  In the noncausal
+model, the locus is not associated with the trait and the high and low
+proteasome activity pools have the same frequency of the BY and RM alleles.  In
+the causal model, the locus is associated with the trait, such that the BY and
+RM allele frequencies differ between pools.  QTLs were defined as loci with a
+LOD $\geq$ 4.5.  In a previous study\cite{Collins2021.05.05.442832}, we
+empirically determined that this threshold produces a 0.5\% false discovery rate
+(FDR) for TFT-based genetic mapping by bulk segregant analysis.  We used the
+following MULTIPOOL settings: bp per centiMorgan = 2,200, bin size = 100 bp,
+effective pool size = 1,000.  As in previous
+studies\cite{pmid24402228,pmid33191917}, we excluded variants with allele
+frequencies higher than 0.9 or lower than
+0.1\cite{pmid24402228,pmid33191917,Collins2021.05.05.442832}.  QTL confidence
+intervals were defined as a 2-LOD drop from the QTL peak (the QTL position with
+the highest LOD value).  We computed the RM allele frequency difference
+($\Delta$AF) between the high and low proteasome activity pools at each allele
+to visualize QTLs.  We also used $\Delta$AF at each QTL peak to determine the
+magnitude and direction of the QTL's effect.  When the RM allele frequency
+difference at a QTL is positive, the RM allele of the QTL is associated with
+higher proteasome activity.  Negative RM allele frequency differences indicate
+QTLs where the RM allele is associated with lower proteasome activity.  Because
+allele frequencies are affected by random counting noise, we smoothed allele
+frequencies along the genome using loess regression prior to calculating
+$\Delta$AF for each sample.
+#+END_EXPORT
+
+** QTL Fine-Mapping By Allelic Engineering
+#+BEGIN_EXPORT latex
+We used CRISPR-Cas9 to edit the \textit{RPT6} -175 locus in the BY strain. Guide
+RNAs (gRNAs) targeting \textit{RPT6} were obtained from the CRISPR track of the
+UCSC Genome Browser\cite{pmid12045153}.  To control for potential off-target
+edits by CRISPR-Cas9, we used two unique guide RNAs to engineer each allelic
+edit.  We selected two gRNAs in the \textit{RPT6} open-reading frame (ORF) based
+on their proximity to the \textit{RPT6} -175 variant (PAM sequences 226 and 194
+bp from \textit{RPT6} -175), their CRISPOR specificity scores\cite{pmid27380939}
+(100 each, where 100 is the highest possible predicted specificity), and their
+predicted cleavage scores\cite{pmid26780180} (66 and 56, where $>$ 55 indicates
+high predicted cleavage efficiency).  We inserted each gRNA into a plasmid that
+expresses Cas9 under the control of the constitutively active \textit{TDH3}
+promoter as follows.  We digested backbone plasmid
+BFA0224\cite{Collins2021.05.05.442832} with the restriction enzymes HpaI and
+BsmBI (New England Biolabs) to remove the backbone vector's existing gRNA.  The
+cut vector was gel purified using the Monarch Gel Purification kit (New England
+Biolabs) according to the manufacturer's instructions.  We then performed
+isothermal assembly cloning using the HiFi Assembly Kit with the gel purified
+vector backbone and oligos encoding each gRNA (OFA1198 or OFA1199; Supplementary
+Table 4) to create plasmids BFA0242 and BFA0243 (Supplementary Table 2).
+Plasmids were miniprepped from DH5$\alpha$ \textit{E. coli} cells using the
+Monarch Plasmid Miniprep kit.  The sequence identities of BFA0242 and BFA0243
+were confirmed by Sanger sequencing.\newline
+
+We created repair templates for co-transformation with BFA0242 and BFA0243 as
+follows.  We first extracted genomic DNA from BY and RM using the ``10 minute
+prep'' protocol\cite{pmid3319781}.  Genomic DNA from each strain was used as a
+template for PCR amplification of the \textit{RPT6} promoter using oligos
+OFA1204 and OFA1207 (Supplementary Table 4).  To prevent Cas9 cutting after
+editing of the \textit{RPT6} -175 locus, we introduced two synonymous
+substitutions into the \textit{RPT6} ORF by converting the serine codons GGA and
+TCA to AGT at base pairs 22-24 and 49-51.  Synonmous substitutions were
+introduced using splicing overlap by extension PCR\cite{pmid2744488} with
+primers OFA1208 and OFA1209.  Full repair templates were then amplified using
+either the BY or RM \textit{UBR1} promoter and the BY \textit{RPT6} ORF as
+templates in a splicing overlap extension by PCR reaction with primers OFA1204
+and OFA1205 (Supplementary Table 4).  The sequence identify of all repair
+templates was verified by Sanger sequencing.\newline
+
+To create BY strains with edited \textit{RPT6} alleles, we co-transformed 150 ng
+of either plasmid BFA0242 or BFA0243 with 1.5 $\mu$g of repair template using
+the transformation protocol above.  The transformation reaction was streaked
+onto solid SC medium lacking histidine to select for the \textit{HIS3}
+selectable marker in BFA0242 or BFA0243.  Colonies from transformation plates
+were single-colony purified on solid medium lacking histidine, then patched onto
+solid YPD medium.  To verify allelic edits, we performed colony PCR using oligos
+1204 and 1206 (Supplementary Table 4).  Reaction products were gel purified
+using the Monarch Gel Purification kit (New England Biolabs) and Sanger
+sequenced using oligos OFA1204 and OFA1206 to confirm both the sequence of the
+\textit{RPT6} promoter and the synonymous substitutions in the \textit{RPT6}
+ORF.  Strains with the desired edits were then transformed to contain TFT
+reporters as indicated above.  We tested 12 independent biological replicates
+per strain per guide RNA per TFT.  For subsequent statistical analyses, we
+pooled strains with the same allelic edit engineered with unique guide RNAs.
+
+#+END_EXPORT
+
+** Data and Statistical Analysis
+#+BEGIN_EXPORT latex
+All data and statistical analyses were performed using R\cite{R_reference}.  In
+all boxplots, the center line shows the median, the box bounds the first and
+third quartiles, and the whiskers extend to 1.5 times the interquartile range.
+DNA binding motifs in the \textit{RPT6} promoter were assessed using the Yeast
+Transcription Factor Specificity Compendium database\cite{pmid22102575}. We
+inferred the allelic status of \textit{RPT6} -175 by comparing the BY and RM
+alleles to a likely-ancestral Taiwanese strain.  The frequency of the RM allele
+at \textit{RPT6} -175 was calculated across and within clades of a global panel
+of 1,011 \textit{S. cerevisiae} isolates\cite{pmid29643504}.  Final figures and
+illustrations were made using Inkscape (version 0.92; Inkscape Project).
+#+END_EXPORT
+
+** Data and Materials Availability
+#+BEGIN_EXPORT latex
+Computational scripts used to process data, for statistical analysis, and to
+generate plots are available at:\\
+
+\url{http://www.github.com/mac230/proteasome\_QTL\_paper}\\
+
+Whole-genome sequencing data is in the process of being deposited into the NIH
+Sequence Read Archive.  Yeast strains and plasmids used in this study are
+available on request.  Correspondence should be addressed to FWA.
+#+END_EXPORT
+
+* Author Contributions
+#+BEGIN_EXPORT latex
+Conceptualization: MAC, FWA\\
+Formal Analysis: MAC\\
+Funding Acquisition: MAC, FWA\\
+Investigation: MAC, RRA\\
+Methodology: MAC, FWA\\
+Resources: FWA\\
+Supervision: MAC, FWA\\
+Validation: MAC, RRA\\
+Visualization: MAC\\
+Writing - Original Draft: MAC\\
+Writing - Review and Editing: MAC, FWA
+#+END_EXPORT
+
+* Acknowledgements
+We thank the members of the Albert laboratory for feedback on the project and
+manuscript.  We thank the University of Minnesota's Flow Cytometry Resource and
+Genomics Center for their contributions to the project.  
+
+* Competing Interests
+#+BEGIN_EXPORT latex
+The authors declare that they have no competing interests.
+#+END_EXPORT
+
+* Financial Disclosure Statement
+#+BEGIN_EXPORT latex
+This work was supported by NIH grants F32-GM128302 to MAC and R35-GM124676 to
+FWA from the National Institute of General Medical Sciences
+(\url{https://www.nigms.nih.gov/}).  The funders had no role in study design,
+data collection and analysis, decision to publish, or preparation of the
+manuscript.\newpage
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\bibliographystyle{unsrt}
+\bibliography{/home/mahlon/bibliographies/mac_bib}
+\newpage
+#+END_EXPORT
+
+* Supporting Information 
+** Supplementary Figure
+#+BEGIN_EXPORT latex
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]
+{emacs/ubi_QTL_paper/figures/final_figures/figure_S02_RPT6_variant_tree.pdf}
+\end{figure}
+\textbf{Supplementary Figure 1.} {\textit{Tree diagram showing the distribution
+  of the \textnormal{RPT6} -175 allele among a panel of 1,011
+  \textnormal{S. cerevisiae} strains.  Clades with the \textnormal{RPT6} -175 RM
+  allele are indicated along with its frequency in that clade in
+  parentheses.\newline}}\newpage
+#+END_EXPORT
+
+** Supplementary Table Captions
+#+BEGIN_EXPORT latex
+\textbf{Supplementary Table 1.} \textit{Overlap of proteasome activity QTLs with
+  known causal genes for N-end Rule QTLs.\newline}
+\textbf{Supplementary Table 2.} \textit{Plasmids used in the study.\newline}
+\textbf{Supplementary Table 3.} \textit{Yeast strains used in the
+  study.\newline}
+\textbf{Supplementary Table 4.} \textit{Oligonucleotides used in the
+  study.\newline}
+#+END_EXPORT

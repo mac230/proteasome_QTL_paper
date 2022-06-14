@@ -1,0 +1,7 @@
+* Overview
+This repository contains analysis code and the manuscript file for
+"Substrate-Specific Effects of Natural Genetic Variation on Proteasome
+Activity".  The analysis code is contained in the file "proteasome_QTL_code.org"
+and the manuscript is contained in "proteasome_QTL_paper.org".  Scripts for
+individual analyses are tangled from "proteasome_QTL_code.org" and located in
+the folder "scripts".
