@@ -90,7 +90,9 @@ plot(tree, type = "unrooted",
 ## load the genotypes at the variants of interest
 tree_data <- read.table(paste0(base_dir,
                                "QTN_tree_data.csv"),
-                        sep = ",", stringsAsFactors = F, header = T)
+                        sep = ",",
+                        stringsAsFactors = F,
+                        header = T)
 
 
 ## load(paste0(base_dir, "IRA2_varGenosStringsOnly_210716.RData"))
@@ -98,7 +100,8 @@ tree_data <- read.table(paste0(base_dir,
 tree_table <- merge(Strain1002,
                     tree_data,
                     by.x = "Standardized.name",
-                    by.y = 0, all.x=T)
+                    by.y = 0,
+                    all.x=T)
 
 head(tree_table)
 
